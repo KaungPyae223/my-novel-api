@@ -13,19 +13,21 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('full_name');
             $table->string('email')->unique();
-            $table->string('unique_name')->unique();
+            $table->string('username')->unique();
             $table->string('password');
-            $table->string('profile_image')->nullable();
-            $table->string('cover_image')->nullable();
-            $table->string('bio')->nullable();
-            $table->string('location')->nullable();
+            $table->text('profile_image')->nullable();
+            $table->text('cover_image')->nullable();
+            $table->text('about')->nullable();
+            $table->text('location')->nullable();
             $table->string('phone')->nullable();
-            $table->string('facebook')->nullable();
-            $table->string('twitter')->nullable();
-            $table->string('instagram')->nullable();
-            $table->string('youtube')->nullable();
+            $table->text('facebook')->nullable();
+            $table->text('twitter')->nullable();
+            $table->text('instagram')->nullable();
+            $table->text('youtube')->nullable();
+            $table->string('profile_image_public_id')->nullable();
+            $table->string('cover_image_public_id')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
