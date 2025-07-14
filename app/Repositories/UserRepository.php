@@ -18,6 +18,7 @@ class UserRepository
         return $this->user->find($id);
     }
 
+
     public function updateUser($id, $data)
     {
 

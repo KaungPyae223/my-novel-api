@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('unique_name')->unique();
-            $table->string('description');
-            $table->string('synopsis');
-            $table->string('tags');
-            $table->string('image');
+            $table->text('description');
+            $table->text('synopsis');
+            $table->text('tags');
+            $table->text('image');
+            $table->string('image_public_id');
             $table->enum('status', config('base.status'))->default('draft');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('genre_id')->constrained('genres')->cascadeOnDelete();

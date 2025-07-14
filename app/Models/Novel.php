@@ -9,4 +9,16 @@ class Novel extends Model
 {
     /** @use HasFactory<\Database\Factories\NovelFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'title',
+        'description',
+        'synopsis',
+        'tags',
+        'image',
+        'status',
+        'genre_id',
+        'user_id',
+        'unique_name',
+    ];
 }

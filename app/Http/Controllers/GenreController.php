@@ -5,15 +5,23 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreGenreRequest;
 use App\Http\Requests\UpdateGenreRequest;
 use App\Models\Genre;
+use App\Repositories\GenreRepository;
 
 class GenreController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+
+    protected $genreRepository;
+
+    public function __construct(GenreRepository $genreRepository) {
+        $this->genreRepository = $genreRepository;
+    }
+
     public function index()
     {
-        //
+        return $this->genreRepository->all();
     }
 
     /**
@@ -21,7 +29,7 @@ class GenreController extends Controller
      */
     public function store(StoreGenreRequest $request)
     {
-        //
+        return $this->genreRepository->create($request->all());
     }
 
     /**

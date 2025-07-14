@@ -54,6 +54,9 @@ class UserController extends Controller
             ], 404);
         }
 
+        $request->merge([
+            'username' => '@'.$request->username,
+        ]);
 
         $this->userRepository->updateUser($id, $request->all());
 

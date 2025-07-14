@@ -22,7 +22,7 @@ class AuthenticationController extends Controller
             'full_name' => $request->full_name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'username' => $request->username,
+            'username' => '@'.$request->username,
         ]);
 
         $token = $user->createToken('api-token')->plainTextToken;

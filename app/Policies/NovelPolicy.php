@@ -37,7 +37,7 @@ class NovelPolicy
      */
     public function update(User $user, Novel $novel): bool
     {
-        return false;
+        return $user->id === $novel->user_id;
     }
 
     /**
@@ -45,7 +45,7 @@ class NovelPolicy
      */
     public function delete(User $user, Novel $novel): bool
     {
-        return false;
+        return $user->id === $novel->user_id;
     }
 
     /**

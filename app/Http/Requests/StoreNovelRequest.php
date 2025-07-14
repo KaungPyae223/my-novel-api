@@ -11,7 +11,7 @@ class StoreNovelRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,12 @@ class StoreNovelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'synopsis' => 'required|string',
+            'tags' => 'required|string',
+            'status' => 'required|in:'.implode(',', config('base.status')),
+            'genre_id' => 'required|exists:genres,id',
         ];
     }
 }

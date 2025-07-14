@@ -17,5 +17,10 @@ class GenreRepository
     {
         return $this->genre->all();
     }
-    
+
+    public function create($data)
+    {
+        return $this->genre->create($data);
+    }
+
 }
