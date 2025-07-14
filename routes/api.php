@@ -33,8 +33,9 @@ Route::prefix("v1")->group(function () {
         ]);
 
         Route::apiResource('novels', NovelController::class);
-        Route::controller(NovelController::class)->prefix('novels')->group(function () {
-            Route::post('/upload-image/{id}', 'novelImageUpload');
+        Route::controller(NovelController::class)->group(function () {
+            Route::post('novels/upload-image/{id}', 'novelImageUpload');
+            Route::get('my-novels', 'getMyNovels');
         });
 
     });

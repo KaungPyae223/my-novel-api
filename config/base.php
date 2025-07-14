@@ -1,8 +1,12 @@
 <?php
 
 return [
-    'status' => [
+    'visibility' => [
         "draft",
         "published",
+    ],
+    'progress' => [
+        "complete",
+        "ongoing",
     ],
 ];

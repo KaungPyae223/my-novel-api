@@ -143,6 +143,20 @@ class NovelController extends Controller
         //
     }
 
+    public function getMyNovels(Request $request)
+    {
+
+        $q = $request->input('q');
+
+
+        $novels = $this->novelRepository->getMyNovels(Auth::user()->id,$q);
+
+        return response()->json([
+            'message' => 'Novels retrieved successfully',
+            'novels' => $novels,
+        ]);
+    }
+
     /**
      * Remove the specified resource from storage.
      */

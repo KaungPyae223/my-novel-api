@@ -18,6 +18,24 @@ class NovelRepository
         return $this->novel->find($id);
     }
 
+    public function getMyNovels($user_id,$q)
+    {
+
+        $query = $this->novel->where('user_id', $user_id);
+
+        if ($q) {
+            $query->where(
+                function ($query) use ($q) {
+                    $query->orWhere('title', 'like', '%' . $q . '%')
+                        ->orWhere('description', 'like', '%' . $q . '%');
+                }
+            );
+        }
+
+        return $query->get();
+
+    }
+
 
 
     public function all()

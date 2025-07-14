@@ -20,7 +20,10 @@ return new class extends Migration
             $table->text('tags');
             $table->text('image');
             $table->string('image_public_id');
-            $table->enum('status', config('base.status'))->default('draft');
+            $table->integer('views')->default(0);
+            $table->enum('visibility', config('base.visibility'))->default('draft');
+            $table->enum('progress', config('base.progress'))->default('draft');
+
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('genre_id')->constrained('genres')->cascadeOnDelete();
             $table->timestamps();
