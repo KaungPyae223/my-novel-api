@@ -18,6 +18,7 @@ class Novel extends Model
         'image',
         'status',
         'genre_id',
+        'image_public_id',
         'user_id',
         'unique_name',
     ];

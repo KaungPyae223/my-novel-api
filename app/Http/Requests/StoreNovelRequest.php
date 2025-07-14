@@ -28,6 +28,7 @@ class StoreNovelRequest extends FormRequest
             'tags' => 'required|string',
             'status' => 'required|in:'.implode(',', config('base.status')),
             'genre_id' => 'required|exists:genres,id',
+            'cover_image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ];
     }
 }

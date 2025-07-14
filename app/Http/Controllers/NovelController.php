@@ -8,12 +8,16 @@ use App\Http\Utils\GenerateUniqueName;
 use App\Http\Utils\ImageUtils;
 use App\Models\Novel;
 use App\Repositories\NovelRepository;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Str;
+
 
 class NovelController extends Controller
 {
+
+    use AuthorizesRequests;
+
     /**
      * Display a listing of the resource.
      */
@@ -26,7 +30,12 @@ class NovelController extends Controller
 
     public function index()
     {
-        //
+        $novels = $this->novelRepository->all();
+
+        return response()->json([
+            'message' => 'Novels retrieved successfully',
+            'novels' => $novels,
+        ]);
     }
 
     /**
@@ -37,14 +46,22 @@ class NovelController extends Controller
 
         $unique_name = GenerateUniqueName::generate($request->title);
 
-        $count = Novel::where('unique_name', $unique_name)->count();
+
+        $count = Novel::where('unique_name', 'like', '%' . $unique_name . '%')->count();
 
         $unique_name = $unique_name . '-' . ($count+1);
+
+        $uploadImage = $request->file('cover_image');
+
+        $uploaded = ImageUtils::uploadImage($uploadImage);
 
         $request->merge([
             'unique_name' => $unique_name,
             'user_id' => Auth::user()->id,
+            'image' => $uploaded["imageUrl"],
+            'image_public_id' => $uploaded["publicId"],
         ]);
+
 
         $novel = $this->novelRepository->create($request->all());
 
@@ -61,6 +78,8 @@ class NovelController extends Controller
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ]);
+
+        $this->authorize('update', $this->novelRepository->findNovel($id),Novel::class);
 
         $novel = $this->novelRepository->findNovel($id);
 
