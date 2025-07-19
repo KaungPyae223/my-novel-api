@@ -21,7 +21,12 @@ class GenreController extends Controller
 
     public function index()
     {
-        return $this->genreRepository->all();
+        return $this->genreRepository->all()->map(function ($genre) {
+            return [
+                'id' => $genre->id,
+                'genre' => $genre->genre,
+            ];
+        });
     }
 
     /**

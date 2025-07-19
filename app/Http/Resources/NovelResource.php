@@ -25,6 +25,7 @@ class NovelResource extends JsonResource
             'views' => $this->views,
             'status' => $this->status,
             'progress' => $this->progress,
+            'genre_id' => $this->genre_id,
             'genre' => $this->genre->genre,
             'user_name' => $this->user->full_name,
             'love_count' => 100,

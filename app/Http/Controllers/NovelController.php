@@ -131,9 +131,21 @@ class NovelController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Novel $novel)
+    public function show($id)
     {
-        //
+
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        return response()->json([
+
+            'data' => new NovelResource($novel),
+        ]);
     }
 
     /**
