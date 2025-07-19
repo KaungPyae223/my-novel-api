@@ -16,11 +16,22 @@ class Novel extends Model
         'synopsis',
         'tags',
         'image',
-        'visibility',
+        'status',
         'progress',
         'genre_id',
+        'views',
         'image_public_id',
         'user_id',
         'unique_name',
     ];
+
+    public function genre()
+    {
+        return $this->belongsTo(Genre::class, 'genre_id', 'id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 }

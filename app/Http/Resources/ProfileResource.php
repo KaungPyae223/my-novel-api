@@ -24,12 +24,13 @@ class ProfileResource extends JsonResource
             'about' => $this->about,
             'location' => $this->location,
             'phone' => $this->phone,
+            'genres' => $this->novels->pluck('genre.genre')->unique()->toArray(),
             'facebook' => $this->facebook,
             'twitter' => $this->twitter,
             'instagram' => $this->instagram,
             'youtube' => $this->youtube,
             'created_at' => $this->created_at,
-            
+
         ];
     }
 }

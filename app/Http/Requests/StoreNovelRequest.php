@@ -26,7 +26,7 @@ class StoreNovelRequest extends FormRequest
             'description' => 'required|string',
             'synopsis' => 'required|string',
             'tags' => 'required|string',
-            'visibility' => 'required|in:'.implode(',', config('base.visibility')),
+            'status' => 'required|in:'.implode(',', config('base.status')),
             'genre_id' => 'required|exists:genres,id',
             'cover_image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ];

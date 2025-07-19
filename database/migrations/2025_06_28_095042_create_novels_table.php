@@ -21,9 +21,8 @@ return new class extends Migration
             $table->text('image');
             $table->string('image_public_id');
             $table->integer('views')->default(0);
-            $table->enum('visibility', config('base.visibility'))->default('draft');
-            $table->enum('progress', config('base.progress'))->default('draft');
-
+            $table->enum('status', config('base.status'))->default('draft');
+            $table->enum('progress', config('base.progress'))->default('ongoing');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('genre_id')->constrained('genres')->cascadeOnDelete();
             $table->timestamps();

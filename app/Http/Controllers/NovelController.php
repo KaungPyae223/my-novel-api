@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreNovelRequest;
 use App\Http\Requests\UpdateNovelRequest;
+use App\Http\Resources\NovelResource;
 use App\Http\Utils\GenerateUniqueName;
 use App\Http\Utils\ImageUtils;
 use App\Models\Novel;
@@ -152,8 +153,7 @@ class NovelController extends Controller
         $novels = $this->novelRepository->getMyNovels(Auth::user()->id,$q);
 
         return response()->json([
-            'message' => 'Novels retrieved successfully',
-            'novels' => $novels,
+            'data' => NovelResource::collection($novels),
         ]);
     }
 

@@ -26,7 +26,7 @@ class UpdateNovelRequest extends FormRequest
             'description' => 'required|string',
             'synopsis' => 'required|string',
             'tags' => 'required|string',
-            'visibility' => 'required|in:'.implode(',', config('base.visibility')),
+            'status' => 'required|in:'.implode(',', config('base.status')),
             'progress' => 'required|in:'.implode(',', config('base.progress')),
             'genre_id' => 'required|exists:genres,id',
 
