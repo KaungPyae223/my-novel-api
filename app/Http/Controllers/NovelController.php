@@ -108,25 +108,7 @@ class NovelController extends Controller
         ]);
     }
 
-    public function updateNovel($id, UpdateNovelRequest $request)
-    {
-        $novel = $this->novelRepository->findNovel($id);
 
-        $this->authorize('update', $novel,Novel::class);
-
-        if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
-        }
-
-        $this->novelRepository->update($novel->id, $request->all());
-
-        return response()->json([
-            'message' => 'Novel updated successfully',
-            'novel' => $novel,
-        ]);
-    }
 
     /**
      * Display the specified resource.
@@ -151,9 +133,24 @@ class NovelController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateNovelRequest $request, Novel $novel)
+    public function update(UpdateNovelRequest $request, $id)
     {
-        //
+        $novel = $this->novelRepository->findNovel($id);
+
+        $this->authorize('update', $novel,Novel::class);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        $this->novelRepository->update($novel->id, $request->all());
+
+        return response()->json([
+            'message' => 'Novel updated successfully',
+            'novel' => $novel,
+        ]);
     }
 
     public function getMyNovels(Request $request)
@@ -172,8 +169,26 @@ class NovelController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Novel $novel)
+    public function destroy($id)
     {
-        //
+        $this->authorize('delete', $this->novelRepository->findNovel($id),Novel::class);
+
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        if ($novel->image_public_id) {
+            ImageUtils::deleteImage($novel->image_public_id);
+        }
+
+        $this->novelRepository->delete($novel->id);
+
+        return response()->json([
+            'message' => 'Novel deleted successfully',
+        ]);
     }
 }

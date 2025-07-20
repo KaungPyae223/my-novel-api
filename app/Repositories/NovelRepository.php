@@ -54,4 +54,10 @@ class NovelRepository
         return $novel->update($data);
     }
 
+    public function delete($id)
+    {
+        $novel = $this->novel->find($id);
+        return $novel->delete();
+    }
+
 }
