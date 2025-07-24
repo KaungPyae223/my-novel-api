@@ -18,8 +18,8 @@ return new class extends Migration
             $table->text('description');
             $table->text('synopsis');
             $table->text('tags');
-            $table->text('image');
-            $table->string('image_public_id');
+            $table->text('image')->nullable();
+            $table->string('image_public_id')->nullable();
             $table->integer('views')->default(0);
             $table->enum('status', config('base.status'))->default('draft');
             $table->enum('progress', config('base.progress'))->default('ongoing');

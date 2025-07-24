@@ -63,8 +63,10 @@ class NovelController extends Controller
             'image_public_id' => $uploaded["publicId"],
         ]);
 
-
         $novel = $this->novelRepository->create($request->all());
+
+
+
 
         return response()->json([
             'message' => 'Novel created successfully',
