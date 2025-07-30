@@ -22,7 +22,7 @@ class NovelResource extends JsonResource
             'synopsis' => $this->synopsis,
             'tags' => $this->tags,
             'image' => $this->image,
-            'views' => $this->views,
+            'views' => 100,
             'status' => $this->status,
             'progress' => $this->progress,
             'genre_id' => $this->genre_id,

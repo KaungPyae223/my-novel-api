@@ -34,4 +34,9 @@ class Novel extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+
+    public function chapters()
+    {
+        return $this->hasMany(Chapter::class, 'novel_id', 'id');
+    }
 }

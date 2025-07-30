@@ -9,4 +9,9 @@ return [
         "complete",
         "ongoing",
     ],
+    'chapter_status' => [
+        "draft",
+        "published",
+        "scheduled",
+    ],
 ];

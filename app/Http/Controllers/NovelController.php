@@ -34,7 +34,6 @@ class NovelController extends Controller
         $novels = $this->novelRepository->all();
 
         return response()->json([
-            'message' => 'Novels retrieved successfully',
             'novels' => $novels,
         ]);
     }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\NovelController;
 use App\Http\Controllers\UserController;
@@ -38,6 +39,10 @@ Route::prefix("v1")->group(function () {
             Route::get('my-novels', 'getMyNovels');
         });
 
+        Route::apiResource('chapters', ChapterController::class);
+        Route::controller(ChapterController::class)->group(function () {
+            Route::get('chapters/generate-suggestion/{id}', 'generateSuggestion');
+        });
     });
 
 
