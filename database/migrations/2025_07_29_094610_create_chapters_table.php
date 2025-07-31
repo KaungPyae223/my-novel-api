@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->enum('status', config('base.chapter_status'))->default('draft');
             $table->foreignId('novel_id')->constrained('novels')->cascadeOnDelete();
-            $table->text('content');
+            $table->longText('content');
             $table->text('summary')->nullable();
             $table->timestamp('scheduled_date')->nullable();
             $table->timestamps();

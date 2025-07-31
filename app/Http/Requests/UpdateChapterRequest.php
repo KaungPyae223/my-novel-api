@@ -11,7 +11,7 @@ class UpdateChapterRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,12 @@ class UpdateChapterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'summary' => 'required|string',
+            'scheduled_date' => 'nullable|date',
+            'status' => 'required|in:'.implode(',', config('base.chapter_status')),
+            'novel_id' => 'required|exists:novels,id',
         ];
     }
 }

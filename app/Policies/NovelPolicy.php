@@ -32,6 +32,11 @@ class NovelPolicy
         return false;
     }
 
+    public function storeChapter(User $user,Novel $novel): bool
+    {
+        return $user->id === $novel->user_id;
+    }
+
     /**
      * Determine whether the user can update the model.
      */

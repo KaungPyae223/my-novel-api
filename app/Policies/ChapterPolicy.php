@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Chapter;
+use App\Models\Novel;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
@@ -27,9 +28,9 @@ class ChapterPolicy
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool
+    public function store(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -37,7 +38,7 @@ class ChapterPolicy
      */
     public function update(User $user, Chapter $chapter): bool
     {
-        return false;
+        return $user->id === $chapter->novel->user_id;
     }
 
     /**

@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreChapterRequest;
 use App\Http\Requests\UpdateChapterRequest;
+use App\Http\Resources\ChapterResource;
+use App\Jobs\GenerateSummary;
 use App\Models\Chapter;
+use App\Repositories\ChapterRepository;
 use App\Repositories\NovelRepository;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ChapterController extends Controller
 {
@@ -16,29 +21,36 @@ class ChapterController extends Controller
      * Display a listing of the resource.
      */
 
-    protected $NovelRepository;
+    use AuthorizesRequests;
 
-    public function __construct(NovelRepository $NovelRepository) {
+    protected $NovelRepository;
+    protected $ChapterRepository;
+
+    public function __construct(NovelRepository $NovelRepository,ChapterRepository $ChapterRepository) {
         $this->NovelRepository = $NovelRepository;
+        $this->ChapterRepository = $ChapterRepository;
     }
 
     public function index()
     {
-
+        return Chapter::all();
     }
 
     public function generateSuggestion($id,Request $request)
     {
 
+
         $chapter = $request->input('chapter');
 
         $cacheKey = 'chapter_suggestion_' . $id.'_'.$chapter;
 
-        $response = Cache::remember($cacheKey, 60*60*24, function () use ($id, $chapter,$cacheKey) {
+        $response = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($id, $chapter,$cacheKey) {
 
             $apiKey = config('ai.api_key');
 
-            $response = Http::withHeaders([
+            $response = Http::withOptions([
+                'proxy' => ''
+            ])->withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])->post('https://openrouter.ai/api/v1/chat/completions', [
@@ -109,7 +121,23 @@ class ChapterController extends Controller
      */
     public function store(StoreChapterRequest $request)
     {
-        //
+
+
+        $novel = $this->NovelRepository->findNovel($request->novel_id);
+
+        $this->authorize('storeChapter',$novel);
+
+        $chapter = $this->ChapterRepository->createChapter($request->all());
+
+        if(!$request->summary){
+            GenerateSummary::dispatch($chapter->id,$request->content);
+        }
+
+        return response()->json([
+            'message' => 'Chapter created successfully',
+            'data' => new ChapterResource($chapter)
+        ], 201);
+
     }
 
     /**
@@ -123,9 +151,24 @@ class ChapterController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateChapterRequest $request, Chapter $chapter)
+    public function update(UpdateChapterRequest $request, $id)
     {
-        //
+        $chapter = $this->ChapterRepository->findChapter($id);
+
+        if (!$chapter) {
+            return response()->json([
+                'message' => 'Chapter not found',
+            ], 404);
+        }
+
+        $this->authorize('update', $chapter);
+
+        $chapter = $this->ChapterRepository->updateChapter($id, $request->all());
+
+        return response()->json([
+            'message' => 'Chapter updated successfully',
+            'data' => new ChapterResource($chapter)
+        ]);
     }
 
     /**
