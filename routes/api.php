@@ -37,14 +37,21 @@ Route::prefix("v1")->group(function () {
         Route::controller(NovelController::class)->group(function () {
             Route::post('novels/upload-image/{id}', 'novelImageUpload');
             Route::get('my-novels', 'getMyNovels');
+            Route::get('novel-chapters/{id}', 'getNovelChapters');
         });
 
         Route::apiResource('chapters', ChapterController::class);
         Route::controller(ChapterController::class)->group(function () {
             Route::get('chapters/generate-suggestion/{id}', 'generateSuggestion');
+            Route::get('chapters/draft-count/{id}', 'draftCount');
         });
     });
 
+
+    Route::controller(NovelController::class)->group(function () {
+        Route::get('user/novels/{id}', 'showUserNovel');
+        Route::get('user/novel-chapters/{id}', 'showUserNovelChapter');
+    });
 
 
 });

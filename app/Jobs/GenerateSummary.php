@@ -42,7 +42,7 @@ class GenerateSummary implements ShouldQueue
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => "Please generate a summary for the chapter. The summary should be concise and include the main events, character development, and any important plot points. The summary should not be longer than 150 words."
+                    'content' => "Please generate a summary for the chapter. The summary should be concise and include the main events, character development, and any important plot points. The summary should not be longer than 150 words. Please return only the summary. Do not include any extra commentary outside the summary."
                 ],
                 [
                     'role' => 'user',
@@ -51,10 +51,12 @@ class GenerateSummary implements ShouldQueue
             ],
         ]);
 
-        $data = $response->json()->choices[0]->message->content;
+       
+        $summary = $response['choices'][0]['message']['content'] ?? null;
+
 
         $chapterRepository->updateChapter($this->chapterId, [
-            'summary' => $data,
+            'summary' => $summary,
         ]);
 
     }

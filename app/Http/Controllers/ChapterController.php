@@ -122,10 +122,24 @@ class ChapterController extends Controller
     public function store(StoreChapterRequest $request)
     {
 
-
         $novel = $this->NovelRepository->findNovel($request->novel_id);
 
         $this->authorize('storeChapter',$novel);
+
+        if($request->status === 'published'){
+            $draftCount = $this->draftCount($request->novel_id);
+
+            if ($draftCount >= 1) {
+                $request->merge([
+                    'status' => 'draft',
+                ]);
+                $message = 'Chapter created successfully but it is in draft status because you do not have a published previous chapter';
+            }
+            else{
+                $message = 'Chapter created successfully';
+            }
+        }
+
 
         $chapter = $this->ChapterRepository->createChapter($request->all());
 
@@ -134,10 +148,54 @@ class ChapterController extends Controller
         }
 
         return response()->json([
-            'message' => 'Chapter created successfully',
+            'message' => $message,
             'data' => new ChapterResource($chapter)
         ], 201);
 
+    }
+
+    public function draftCount($id)
+    {
+        $novel = $this->NovelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        $draftCount = $novel->chapters()->where('status', '!=', 'published')->count();
+
+        return $draftCount;
+
+    }
+
+    public function updateChapterStatusCheck($novel_id,$chapter_id)
+    {
+        $novel = $this->NovelRepository->findNovel($novel_id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        $chapter = $this->ChapterRepository->findChapter($chapter_id);
+
+        if (!$chapter) {
+            return response()->json([
+                'message' => 'Chapter not found',
+            ], 404);
+        }
+
+        $draft_count = $novel->chapters()->where('id','<', $chapter_id)->where('status' ,'!=', 'published')->count();
+
+        $published_count = $novel->chapters()->where('id','>', $chapter_id)->where('status' ,'!=', 'draft')->count();
+
+        return [
+            'canDraft' => $published_count == 0,
+            'canPublish' => $draft_count == 0,
+        ];
     }
 
     /**
@@ -163,10 +221,30 @@ class ChapterController extends Controller
 
         $this->authorize('update', $chapter);
 
+        $chapterStatusCheck = $this->updateChapterStatusCheck($request->novel_id, $id);
+
+        if ($request->status === 'published' && $chapterStatusCheck['canPublish'] == false) {
+            $request->merge([
+                'status' => 'draft',
+            ]);
+            $message = 'Chapter updated successfully but it is in draft status because you do not have a published previous chapter';
+        }
+
+        elseif ($request->status === 'draft' && $chapterStatusCheck['canDraft'] == false) {
+            $request->merge([
+                'status' => 'published',
+            ]);
+            $message = 'Chapter updated successfully but it is in published status because there are published chapters after this chapter';
+        }
+
+        else{
+            $message = 'Chapter updated successfully';
+        }
+
         $chapter = $this->ChapterRepository->updateChapter($id, $request->all());
 
         return response()->json([
-            'message' => 'Chapter updated successfully',
+            'message' => $message,
             'data' => new ChapterResource($chapter)
         ]);
     }

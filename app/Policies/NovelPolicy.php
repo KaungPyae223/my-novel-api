@@ -21,7 +21,7 @@ class NovelPolicy
      */
     public function view(User $user, Novel $novel): bool
     {
-        return false;
+        return $user->id === $novel->user_id;
     }
 
     /**

@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreNovelRequest;
 use App\Http\Requests\UpdateNovelRequest;
+use App\Http\Resources\NovelChapterResource;
 use App\Http\Resources\NovelResource;
+use App\Http\Resources\UserChapterWithAuth;
+use App\Http\Resources\UserChapterWithoutAuth;
 use App\Http\Utils\GenerateUniqueName;
 use App\Http\Utils\ImageUtils;
 use App\Models\Novel;
@@ -131,6 +134,28 @@ class NovelController extends Controller
         ]);
     }
 
+    public function showUserNovel($id)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        if (Auth::guard('sanctum')->check()) {
+            // Add view count
+
+        }
+
+        return response()->json([
+            'data' => new NovelResource($novel),
+        ]);
+    }
+
+
+
     /**
      * Update the specified resource in storage.
      */
@@ -151,6 +176,46 @@ class NovelController extends Controller
         return response()->json([
             'message' => 'Novel updated successfully',
             'novel' => $novel,
+        ]);
+    }
+
+    public function getNovelChapters($id)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        $this->authorize('view', $novel,Novel::class);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => NovelChapterResource::collection($novel->chapters),
+        ]);
+    }
+
+    public function showUserNovelChapter($id)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        $chapters = $novel->chapters()->where('status', 'published')->get();
+
+        if (Auth::guard('sanctum')->check()) {
+           $data = UserChapterWithAuth::collection($chapters);
+        }else{
+            $data = UserChapterWithoutAuth::collection($chapters);
+        }
+
+        return response()->json([
+            'data' => $data,
         ]);
     }
 
