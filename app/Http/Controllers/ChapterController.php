@@ -10,10 +10,9 @@ use App\Models\Chapter;
 use App\Repositories\ChapterRepository;
 use App\Repositories\NovelRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class ChapterController extends Controller
 {
@@ -36,15 +35,26 @@ class ChapterController extends Controller
         return Chapter::all();
     }
 
-    public function generateSuggestion($id,Request $request)
+    public function generateSuggestion($id)
     {
 
 
-        $chapter = $request->input('chapter');
+        $novel = $this->NovelRepository->findNovel($id);
 
-        $cacheKey = 'chapter_suggestion_' . $id.'_'.$chapter;
 
-        $response = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($id, $chapter,$cacheKey) {
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        $last_chapter = $novel->chapters()->orderBy('id', 'desc')->first();
+
+
+
+        $cacheKey = 'chapter_suggestion_' . $id.'_'.$last_chapter->id;
+
+        $response = Cache::remember($cacheKey, now()->addHours(12), function () use ($novel, $last_chapter) {
 
             $apiKey = config('ai.api_key');
 
@@ -71,7 +81,7 @@ class ChapterController extends Controller
                     ],
                     [
                         'role' => 'user',
-                        'content' => "Here's a summary of my fantasy novel chapter: The villagers see a strange light in the sky, and later a dragon crashes into the forest near the town. The protagonist, a young hunter, is the first to find the dragon. He’s afraid, but feels strangely drawn to it."
+                        'content' => "Here's a summary of novel: ".$novel->synopsis."\n\n Here's the content of last chapter: ".$last_chapter->content."\n\n"
                     ]
                 ],
             ]);
@@ -204,6 +214,35 @@ class ChapterController extends Controller
     public function show(Chapter $chapter)
     {
         //
+    }
+
+    public function grammarCheck(Request $request){
+
+        $request->validate([
+            'content' => 'required|string',
+        ]);
+
+        $content = $request->content;
+
+        $apiKey = config('ai.grammar_key');
+
+        $response = Http::withOptions([
+            'proxy' => ''
+        ])->withHeaders([
+            'Content-Type' => 'application/json',
+        ])->post('https://api.textgears.com/analyze', [
+            'text' => $content,
+            'language' => 'en-US',
+            'key' => $apiKey,
+        ]);
+
+        $fleschKincaid = $response['response']['stats']['fleschKincaid'];
+        $errors = $response['response']['grammar']['errors'];
+
+        return response()->json([
+            'fleschKincaid' => $fleschKincaid,
+            'errors' => $errors,
+        ], 200);
     }
 
     /**
