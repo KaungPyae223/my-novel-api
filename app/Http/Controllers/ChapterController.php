@@ -126,6 +126,101 @@ class ChapterController extends Controller
         return response()->json($response);
     }
 
+    public function assessment(Request $request){
+        $request->validate([
+            'content' => 'required|string',
+        ]);
+
+        $apiKey = config('ai.api_key');
+
+        $response = Http::withOptions([
+            'proxy' => ''
+        ])->withHeaders([
+            'Authorization' => 'Bearer ' . $apiKey,
+            'Content-Type' => 'application/json',
+        ])->post('https://openrouter.ai/api/v1/chat/completions', [
+            'model' => 'deepseek/deepseek-r1-0528:free',
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => "You are a fiction writing assistant. Analyze the following chapter and provide enhancement suggestions across the following four key categories:
+
+                        1. **Story Pacing** — Evaluate how well the chapter balances dialogue, action, and narration. Suggest any improvements to rhythm, tempo, or structural pauses.
+
+                        2. **Character Development** — Analyze the emotional and psychological growth of the characters. Suggest ways to deepen their emotional arc or show internal conflict more vividly.
+
+                        3. **World Building** — Assess the immersive quality of the setting. Suggest improvements in descriptive details or the uniqueness of the environment.
+
+                        4. **Chapter Ending** — Evaluate how effective the ending is in leaving an impact or encouraging the reader to continue. Suggest how it can be made more satisfying or suspenseful.
+
+                        For each category:
+                        - Give a short but insightful paragraph.
+                        - Include a score out of 10.
+
+                        Then, give an **Overall Assessment**:
+                        - A summary of how the chapter contributes to the story.
+                        - Mention strengths and opportunities for improvement.
+                        - Provide an overall score out of 10 and a one-word rating (e.g., \"Excellent\", \"Good\", \"Needs Improvement\").
+
+                        Respond only in valid JSON format with the following structure:
+                        {
+                            \"story_pacing\": {
+                                \"suggestion\": \"Your suggestion here\",
+                                \"score\": \"Your score here (0-10) please give only the score number\"
+                            },
+                            \"character_development\": {
+                                \"suggestion\": \"Your suggestion here\",
+                                \"score\": \"Your score here (0-10) please give only the score number\"
+                            },
+                            \"world_building\": {
+                                \"suggestion\": \"Your suggestion here\",
+                                \"score\": \"Your score here (0-10) please give only the score number\"
+                            },
+                            \"chapter_ending\": {
+                                \"suggestion\": \"Your suggestion here\",
+                                \"score\": \"Your score here (0-10) please give only the score number\"
+                            },
+                            \"overall_assessment\": {
+                                \"suggestion\": \"Your suggestion here\",
+                                \"score\": \"Your score here (0-10) please give only the score number\"
+                            }
+                        }
+                        Do not include any extra commentary outside the JSON.
+                    "
+                ],
+                [
+                    'role' => 'user',
+                    'content' => "Here's the content of chapter: ".$request->content."\n\n"
+                ]
+            ],
+        ]);
+
+        $content = $response['choices'][0]['message']['content'] ?? null;
+
+
+        if ($content) {
+            //Mark Down to JSON
+            preg_match('/```json\s*(.*?)\s*```/s', $content, $matches);
+
+            if (isset($matches[1])) {
+                $json = $matches[1];
+                $data = json_decode($json, true);
+
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    return response()->json($data);
+                } else {
+                    return response()->json(['error' => 'Failed to parse suggestion JSON.']);
+                }
+            } else {
+                return response()->json(['error' => 'No JSON block found in response.']);
+            }
+
+        }
+
+        return response()->json(['error' => 'Invalid response content.']);
+
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -226,18 +321,26 @@ class ChapterController extends Controller
 
         $apiKey = config('ai.grammar_key');
 
-        $response = Http::withOptions([
-            'proxy' => ''
-        ])->withHeaders([
-            'Content-Type' => 'application/json',
-        ])->post('https://api.textgears.com/analyze', [
-            'text' => $content,
-            'language' => 'en-US',
-            'key' => $apiKey,
-        ]);
 
-        $fleschKincaid = $response['response']['stats']['fleschKincaid'];
-        $errors = $response['response']['grammar']['errors'];
+        $response = Cache::remember($content,now()->addHours(12), function () use ($content,$apiKey) {
+            $data = Http::withOptions([
+                'proxy' => ''
+            ])->withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post('https://api.textgears.com/analyze', [
+                'text' => $content,
+                'language' => 'en-US',
+                'key' => $apiKey,
+            ]);
+
+            return $data->json();
+        });
+
+
+        $data = $response["response"];
+
+        $fleschKincaid = $data['stats']['fleschKincaid'];
+        $errors = $data['grammar']['errors'];
 
         return response()->json([
             'fleschKincaid' => $fleschKincaid,

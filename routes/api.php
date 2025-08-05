@@ -44,7 +44,8 @@ Route::prefix("v1")->group(function () {
         Route::controller(ChapterController::class)->group(function () {
             Route::get('chapters/generate-suggestion/{id}', 'generateSuggestion');
             Route::get('chapters/draft-count/{id}', 'draftCount');
-            Route::get('grammar-check', 'grammarCheck');
+            Route::post('grammar-check', 'grammarCheck');
+            Route::post('chapter-assessment', 'assessment');
         });
     });
 
