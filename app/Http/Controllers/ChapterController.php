@@ -54,6 +54,8 @@ class ChapterController extends Controller
 
         $cacheKey = 'chapter_suggestion_' . $id.'_'.$last_chapter->id;
 
+
+
         $response = Cache::remember($cacheKey, now()->addHours(12), function () use ($novel, $last_chapter) {
 
             $apiKey = config('ai.api_key');
@@ -87,7 +89,6 @@ class ChapterController extends Controller
             ]);
 
 
-
             $content = $response['choices'][0]['message']['content'] ?? null;
 
 
@@ -117,6 +118,8 @@ class ChapterController extends Controller
             }
 
         });
+
+        return $response;
 
         if (isset($response['error'])) {
             Cache::forget($cacheKey);
@@ -243,6 +246,8 @@ class ChapterController extends Controller
             else{
                 $message = 'Chapter created successfully';
             }
+        }else{
+            $message = 'Chapter created successfully';
         }
 
 
@@ -322,8 +327,7 @@ class ChapterController extends Controller
         $apiKey = config('ai.grammar_key');
 
 
-        $response = Cache::remember($content,now()->addHours(12), function () use ($content,$apiKey) {
-            $data = Http::withOptions([
+        $response = Http::withOptions([
                 'proxy' => ''
             ])->withHeaders([
                 'Content-Type' => 'application/json',
@@ -332,10 +336,6 @@ class ChapterController extends Controller
                 'language' => 'en-US',
                 'key' => $apiKey,
             ]);
-
-            return $data->json();
-        });
-
 
         $data = $response["response"];
 
