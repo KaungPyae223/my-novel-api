@@ -46,6 +46,8 @@ Route::prefix("v1")->group(function () {
             Route::get('chapters/draft-count/{id}', 'draftCount');
             Route::post('grammar-check', 'grammarCheck');
             Route::post('chapter-assessment', 'assessment');
+            Route::get('chapter-status-check', 'chapterStatusCheck');
+            Route::get('chapters/update-chapter-show/{id}', 'updateChapterShow');
         });
     });
 

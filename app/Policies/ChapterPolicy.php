@@ -46,7 +46,7 @@ class ChapterPolicy
      */
     public function delete(User $user, Chapter $chapter): bool
     {
-        return false;
+        return $user->id === $chapter->novel->user_id;
     }
 
     /**

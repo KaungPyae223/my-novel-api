@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreChapterRequest;
 use App\Http\Requests\UpdateChapterRequest;
 use App\Http\Resources\ChapterResource;
+use App\Http\Resources\ChapterUpdateResource;
 use App\Jobs\GenerateSummary;
 use App\Models\Chapter;
 use App\Repositories\ChapterRepository;
@@ -119,7 +120,6 @@ class ChapterController extends Controller
 
         });
 
-        return $response;
 
         if (isset($response['error'])) {
             Cache::forget($cacheKey);
@@ -250,6 +250,12 @@ class ChapterController extends Controller
             $message = 'Chapter created successfully';
         }
 
+        if($request->status != 'scheduled'){
+            $request->merge([
+                'scheduled_date' => null,
+            ]);
+        }
+
 
         $chapter = $this->ChapterRepository->createChapter($request->all());
 
@@ -280,6 +286,17 @@ class ChapterController extends Controller
 
     }
 
+    public function chapterStatusCheck(Request $request)
+    {
+        $chapter_id = $request->input('chapter_id');
+
+        $novel_id = $request->input('novel_id');
+
+        $chapterStatusCheck = $this->updateChapterStatusCheck($novel_id,$chapter_id);
+
+        return response()->json($chapterStatusCheck);
+    }
+
     public function updateChapterStatusCheck($novel_id,$chapter_id)
     {
         $novel = $this->NovelRepository->findNovel($novel_id);
@@ -300,7 +317,7 @@ class ChapterController extends Controller
 
         $draft_count = $novel->chapters()->where('id','<', $chapter_id)->where('status' ,'!=', 'published')->count();
 
-        $published_count = $novel->chapters()->where('id','>', $chapter_id)->where('status' ,'!=', 'draft')->count();
+        $published_count = $novel->chapters()->where('id','>', $chapter_id)->where('status' ,'==', 'published')->count();
 
         return [
             'canDraft' => $published_count == 0,
@@ -308,12 +325,48 @@ class ChapterController extends Controller
         ];
     }
 
+
+
     /**
      * Display the specified resource.
      */
-    public function show(Chapter $chapter)
+
+     public function updateChapterShow($id)
+     {
+        $chapter = $this->ChapterRepository->findChapter($id);
+
+        if (!$chapter) {
+            return response()->json([
+                'message' => 'Chapter not found',
+            ], 404);
+        }
+
+        $this->authorize('update', $chapter);
+
+        return response()->json([
+            'data' => new ChapterUpdateResource($chapter)
+        ]);
+     }
+
+    public function show($id)
     {
-        //
+        $chapter = $this->ChapterRepository->findChapter($id);
+
+        if (!$chapter) {
+            return response()->json([
+                'message' => 'Chapter not found',
+            ], 404);
+        }
+
+        if ($chapter->status != 'published') {
+            return response()->json([
+                'message' => 'Chapter is not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => new ChapterResource($chapter)
+        ]);
     }
 
     public function grammarCheck(Request $request){
@@ -363,7 +416,7 @@ class ChapterController extends Controller
 
         $this->authorize('update', $chapter);
 
-        $chapterStatusCheck = $this->updateChapterStatusCheck($request->novel_id, $id);
+        $chapterStatusCheck = $this->updateChapterStatusCheck($chapter->novel_id, $id);
 
         if ($request->status === 'published' && $chapterStatusCheck['canPublish'] == false) {
             $request->merge([
@@ -383,19 +436,47 @@ class ChapterController extends Controller
             $message = 'Chapter updated successfully';
         }
 
+        if($request->status != 'scheduled'){
+            $request->merge([
+                'scheduled_date' => null,
+            ]);
+        }
+
+
+
         $chapter = $this->ChapterRepository->updateChapter($id, $request->all());
 
         return response()->json([
             'message' => $message,
-            'data' => new ChapterResource($chapter)
+            'data' => new ChapterUpdateResource($chapter)
         ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Chapter $chapter)
+    public function destroy($id)
     {
-        //
+        $chapter = $this->ChapterRepository->findChapter($id);
+
+        if(!$chapter){
+            return response()->json([
+                'message' => 'Chapter not found',
+            ], 404);
+        }
+
+        $this->authorize('delete', $chapter);
+
+        if($chapter->status != 'draft'){
+            return response()->json([
+                'message' => 'Chapter is not in draft status',
+            ], 400);
+        }
+
+        $this->ChapterRepository->deleteChapter($id);
+
+        return response()->json([
+            'message' => 'Chapter deleted successfully',
+        ], 200);
     }
 }

@@ -51,7 +51,8 @@ class NovelRepository
     public function update($id, $data)
     {
         $novel = $this->novel->find($id);
-        return $novel->update($data);
+        $novel->update($data);
+        return $novel;
     }
 
     public function delete($id)

@@ -24,7 +24,9 @@ class ChapterRepository
 
         $chapter = $this->chapter->find($id);
 
-        return $chapter->update($data);
+        $chapter->update($data);
+
+        return $chapter;
     }
 
     public function deleteChapter($id) {

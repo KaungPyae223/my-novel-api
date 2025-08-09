@@ -27,7 +27,6 @@ class UpdateChapterRequest extends FormRequest
             'summary' => 'required|string',
             'scheduled_date' => 'nullable|date',
             'status' => 'required|in:'.implode(',', config('base.chapter_status')),
-            'novel_id' => 'required|exists:novels,id',
         ];
     }
 }
