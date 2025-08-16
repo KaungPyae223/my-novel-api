@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('image_public_id')->nullable();
             $table->enum('status', config('base.status'))->default('draft');
             $table->enum('progress', config('base.progress'))->default('ongoing');
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('genre_id')->constrained('genres')->cascadeOnDelete();
             $table->timestamps();
         });

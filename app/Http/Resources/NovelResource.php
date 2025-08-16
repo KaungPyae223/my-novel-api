@@ -29,7 +29,7 @@ class NovelResource extends JsonResource
             'genre' => $this->genre->genre,
             'user_name' => $this->user->full_name,
             'love_count' => 100,
-            'total_chapters' => 10,
+            'total_chapters' => $this->chapters()->where('status', 'published')->count(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

@@ -40,7 +40,9 @@ Route::prefix("v1")->group(function () {
             Route::get('novel-chapters/{id}', 'getNovelChapters');
         });
 
-        Route::apiResource('chapters', ChapterController::class);
+        Route::apiResource('chapters', ChapterController::class)->except([
+            'index', 'show'
+        ]);
         Route::controller(ChapterController::class)->group(function () {
             Route::get('chapters/generate-suggestion/{id}', 'generateSuggestion');
             Route::get('chapters/draft-count/{id}', 'draftCount');
@@ -56,6 +58,10 @@ Route::prefix("v1")->group(function () {
         Route::get('user/novels/{id}', 'showUserNovel');
         Route::get('user/novel-chapters/{id}', 'showUserNovelChapter');
     });
+
+    Route::apiResource('chapters', ChapterController::class)->only([
+        'show',
+    ]);
 
 
 });

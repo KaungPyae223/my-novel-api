@@ -128,6 +128,8 @@ class NovelController extends Controller
             ], 404);
         }
 
+        $this->authorize('view', $novel,Novel::class);
+
         return response()->json([
 
             'data' => new NovelResource($novel),
@@ -144,10 +146,20 @@ class NovelController extends Controller
             ], 404);
         }
 
-        if (Auth::guard('sanctum')->check()) {
-            // Add view count
+        $user_id = null;
 
+        if (Auth::guard('sanctum')->check()) {
+            $user_id = Auth::guard('sanctum')->user()->id;
         }
+
+
+        if ($novel->status != 'published' && !Auth::guard('sanctum')->check() && $novel->user_id != $user_id) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+
 
         return response()->json([
             'data' => new NovelResource($novel),

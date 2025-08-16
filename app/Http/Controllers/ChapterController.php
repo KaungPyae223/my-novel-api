@@ -12,6 +12,7 @@ use App\Repositories\ChapterRepository;
 use App\Repositories\NovelRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -55,8 +56,7 @@ class ChapterController extends Controller
 
         $cacheKey = 'chapter_suggestion_' . $id.'_'.$last_chapter->id;
 
-
-
+        
         $response = Cache::remember($cacheKey, now()->addHours(12), function () use ($novel, $last_chapter) {
 
             $apiKey = config('ai.api_key');
@@ -341,6 +341,8 @@ class ChapterController extends Controller
             ], 404);
         }
 
+
+
         $this->authorize('update', $chapter);
 
         return response()->json([
@@ -358,9 +360,15 @@ class ChapterController extends Controller
             ], 404);
         }
 
-        if ($chapter->status != 'published') {
+        $user_id = null;
+
+        if (Auth::guard('sanctum')->check()) {
+            $user_id = Auth::guard('sanctum')->user()->id;
+        }
+
+        if ($chapter->status != 'published' && !Auth::guard('sanctum')->check() && $chapter->novel->user_id != $user_id) {
             return response()->json([
-                'message' => 'Chapter is not found',
+                'message' => 'Chapter not found',
             ], 404);
         }
 

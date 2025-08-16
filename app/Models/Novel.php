@@ -39,4 +39,9 @@ class Novel extends Model
     {
         return $this->hasMany(Chapter::class, 'novel_id', 'id');
     }
+
+    public function posts()
+    {
+        return $this->morphMany(post::class, 'postable');
+    }
 }
