@@ -61,4 +61,11 @@ class NovelRepository
         return $novel->delete();
     }
 
+    public function createNovelPost($id,$data)
+    {
+        $novel = $this->findNovel($id);
+        $post = $novel->posts()->create($data);
+        return $post;
+    }
+
 }

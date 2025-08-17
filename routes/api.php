@@ -38,6 +38,8 @@ Route::prefix("v1")->group(function () {
             Route::post('novels/upload-image/{id}', 'novelImageUpload');
             Route::get('my-novels', 'getMyNovels');
             Route::get('novel-chapters/{id}', 'getNovelChapters');
+            Route::post('novels/create-post/{id}', 'createNovelPost');
+            Route::get('novels/posts/{id}', 'getNovelPosts');
         });
 
         Route::apiResource('chapters', ChapterController::class)->except([

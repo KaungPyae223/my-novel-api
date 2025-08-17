@@ -3,15 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreNovelRequest;
+use App\Http\Requests\StorepostRequest;
 use App\Http\Requests\UpdateNovelRequest;
 use App\Http\Resources\NovelChapterResource;
 use App\Http\Resources\NovelResource;
+use App\Http\Resources\PostResource;
 use App\Http\Resources\UserChapterWithAuth;
 use App\Http\Resources\UserChapterWithoutAuth;
 use App\Http\Utils\GenerateUniqueName;
 use App\Http\Utils\ImageUtils;
 use App\Models\Novel;
 use App\Repositories\NovelRepository;
+use App\Repositories\PostRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,9 +30,11 @@ class NovelController extends Controller
      */
 
     protected $novelRepository;
+    protected $postRepository;
 
-    public function __construct(NovelRepository $novelRepository) {
+    public function __construct(NovelRepository $novelRepository, PostRepository $postRepository) {
         $this->novelRepository = $novelRepository;
+        $this->postRepository = $postRepository;
     }
 
     public function index()
@@ -193,6 +198,8 @@ class NovelController extends Controller
 
     public function getNovelChapters($id)
     {
+
+
         $novel = $this->novelRepository->findNovel($id);
 
         $this->authorize('view', $novel,Novel::class);
@@ -269,4 +276,63 @@ class NovelController extends Controller
             'message' => 'Novel deleted successfully',
         ]);
     }
+
+
+    // Post
+
+
+    public function createNovelPost($id, StorepostRequest $request)
+    {
+
+
+        $novel = $this->novelRepository->findNovel($id);
+
+        $this->authorize('update', $novel,Novel::class);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+
+
+        $uploadImage = $request->file('post_image');
+
+        if ($uploadImage) {
+            $uploaded = ImageUtils::uploadImage($uploadImage);
+            $request->merge([
+                'image' => $uploaded["imageUrl"],
+                'image_public_id' => $uploaded["publicId"],
+            ]);
+        }
+
+        $request->merge([
+            'user_id' => Auth::user()->id,
+        ]);
+
+        $post = $this->postRepository->createNovelPost($id, $request->all());
+
+        return response()->json([
+            'message' => 'Post created successfully',
+            'post' => $post,
+        ]);
+    }
+
+    public function getNovelPosts($id)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+
+        return response()->json([
+            'data' => PostResource::collection($novel->posts),
+        ]);
+    }
+
 }

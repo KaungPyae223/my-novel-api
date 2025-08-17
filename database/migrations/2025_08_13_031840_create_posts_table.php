@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->text('content');
             $table->string('image')->nullable();
+            $table->string('image_public_id')->nullable();
 
             $table->unsignedBigInteger('postable_id');
             $table->string('postable_type');
