@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\NovelController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -53,6 +54,9 @@ Route::prefix("v1")->group(function () {
             Route::get('chapter-status-check', 'chapterStatusCheck');
             Route::get('chapters/update-chapter-show/{id}', 'updateChapterShow');
         });
+
+        Route::apiResource('posts',PostController::class)->only(["destroy","update"]);
+
     });
 
 
@@ -64,6 +68,7 @@ Route::prefix("v1")->group(function () {
     Route::apiResource('chapters', ChapterController::class)->only([
         'show',
     ]);
+
 
 
 });

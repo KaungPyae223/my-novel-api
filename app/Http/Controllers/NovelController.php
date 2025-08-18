@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreNovelRequest;
-use App\Http\Requests\StorepostRequest;
+use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdateNovelRequest;
 use App\Http\Resources\NovelChapterResource;
 use App\Http\Resources\NovelResource;
@@ -12,6 +12,7 @@ use App\Http\Resources\UserChapterWithAuth;
 use App\Http\Resources\UserChapterWithoutAuth;
 use App\Http\Utils\GenerateUniqueName;
 use App\Http\Utils\ImageUtils;
+use App\Jobs\DeleteImage;
 use App\Models\Novel;
 use App\Repositories\NovelRepository;
 use App\Repositories\PostRepository;
@@ -89,7 +90,6 @@ class NovelController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-        $this->authorize('update', $this->novelRepository->findNovel($id),Novel::class);
 
         $novel = $this->novelRepository->findNovel($id);
 
@@ -99,8 +99,10 @@ class NovelController extends Controller
             ], 404);
         }
 
+        $this->authorize('update', $novel);
+
         if ($novel->image_public_id) {
-            ImageUtils::deleteImage($novel->image_public_id);
+            dispatch(new DeleteImage($novel->image_public_id));
         }
 
         $uploadImage = $request->file('image');
@@ -133,7 +135,7 @@ class NovelController extends Controller
             ], 404);
         }
 
-        $this->authorize('view', $novel,Novel::class);
+        $this->authorize('view', $novel);
 
         return response()->json([
 
@@ -180,13 +182,14 @@ class NovelController extends Controller
     {
         $novel = $this->novelRepository->findNovel($id);
 
-        $this->authorize('update', $novel,Novel::class);
-
         if (!$novel) {
             return response()->json([
                 'message' => 'Novel not found',
             ], 404);
         }
+
+        $this->authorize('update', $novel);
+
 
         $this->novelRepository->update($novel->id, $request->all());
 
@@ -202,13 +205,15 @@ class NovelController extends Controller
 
         $novel = $this->novelRepository->findNovel($id);
 
-        $this->authorize('view', $novel,Novel::class);
 
         if (!$novel) {
             return response()->json([
                 'message' => 'Novel not found',
             ], 404);
         }
+
+        $this->authorize('view', $novel);
+
 
         return response()->json([
             'data' => NovelChapterResource::collection($novel->chapters),
@@ -256,7 +261,6 @@ class NovelController extends Controller
      */
     public function destroy($id)
     {
-        $this->authorize('delete', $this->novelRepository->findNovel($id),Novel::class);
 
         $novel = $this->novelRepository->findNovel($id);
 
@@ -266,8 +270,10 @@ class NovelController extends Controller
             ], 404);
         }
 
+        $this->authorize('delete', $novel);
+
         if ($novel->image_public_id) {
-            ImageUtils::deleteImage($novel->image_public_id);
+            dispatch(new DeleteImage($novel->image_public_id));
         }
 
         $this->novelRepository->delete($novel->id);
@@ -281,13 +287,12 @@ class NovelController extends Controller
     // Post
 
 
-    public function createNovelPost($id, StorepostRequest $request)
+    public function createNovelPost($id, StorePostRequest $request)
     {
-
 
         $novel = $this->novelRepository->findNovel($id);
 
-        $this->authorize('update', $novel,Novel::class);
+
 
         if (!$novel) {
             return response()->json([
@@ -295,6 +300,7 @@ class NovelController extends Controller
             ], 404);
         }
 
+        $this->authorize('update', $novel);
 
 
         $uploadImage = $request->file('post_image');
@@ -311,7 +317,7 @@ class NovelController extends Controller
             'user_id' => Auth::user()->id,
         ]);
 
-        $post = $this->postRepository->createNovelPost($id, $request->all());
+        $post = $this->novelRepository->createNovelPost($id, $request->all());
 
         return response()->json([
             'message' => 'Post created successfully',
@@ -321,6 +327,7 @@ class NovelController extends Controller
 
     public function getNovelPosts($id)
     {
+
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {

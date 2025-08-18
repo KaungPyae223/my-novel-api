@@ -16,6 +16,7 @@ class PostResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'relative_id' => $this->postable_id,
             'content' => $this->content,
             'image' => $this->image,
             'user' => collect(new UserResource($this->user))->only([

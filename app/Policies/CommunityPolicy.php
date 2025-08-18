@@ -45,6 +45,7 @@ class CommunityPolicy
      */
     public function delete(User $user, Community $community): bool
     {
+        
         return false;
     }
 
