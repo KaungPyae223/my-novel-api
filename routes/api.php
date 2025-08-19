@@ -55,7 +55,10 @@ Route::prefix("v1")->group(function () {
             Route::get('chapters/update-chapter-show/{id}', 'updateChapterShow');
         });
 
-        Route::apiResource('posts',PostController::class)->only(["destroy","update"]);
+        Route::apiResource('posts',PostController::class)->only(["destroy"]);
+        Route::controller(PostController::class)->group(function () {
+            Route::post('posts/{id}', 'update');
+        });
 
     });
 

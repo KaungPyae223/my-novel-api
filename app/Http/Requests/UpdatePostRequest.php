@@ -11,7 +11,7 @@ class UpdatePostRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,8 @@ class UpdatePostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'content' => 'required',
+            'post_image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
 }

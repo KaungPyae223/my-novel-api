@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
+use App\Http\Utils\ImageUtils;
 use App\Jobs\DeleteImage;
 use App\Models\Post;
 use App\Repositories\PostRepository;
@@ -49,9 +50,39 @@ class PostController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdatePostRequest $request, post $post)
+    public function update(UpdatePostRequest $request, $id)
     {
-        //
+
+        $post = $this->postRepository->findPost($id);
+
+        if (!$post) {
+            return response()->json([
+                'message' => 'Post not found',
+            ], 404);
+        }
+
+        $this->authorize('update', $post);
+
+
+        if ($request->hasFile('post_image')) {
+            if ($post->image_public_id) {
+                dispatch(new DeleteImage($post->image_public_id));
+            }
+            $uploadImage = $request->file('post_image');
+            $uploaded = ImageUtils::uploadImage($uploadImage);
+            $request->merge([
+                'image' => $uploaded["imageUrl"],
+                'image_public_id' => $uploaded["publicId"],
+            ]);
+        }
+
+        $post = $this->postRepository->update($id, $request->all());
+
+
+        return response()->json([
+            'message' => 'Post updated successfully',
+            'post' => $post,
+        ]);
     }
 
     /**

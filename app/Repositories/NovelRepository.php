@@ -68,4 +68,10 @@ class NovelRepository
         return $post;
     }
 
+    public function getNovelPost($id)
+    {
+        $novel = $this->findNovel($id);
+        return $novel->posts()->orderBy('created_at', 'desc')->get();
+    }
+
 }

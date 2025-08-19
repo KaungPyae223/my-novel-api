@@ -336,9 +336,10 @@ class NovelController extends Controller
             ], 404);
         }
 
+        $novelPosts = $this->novelRepository->getNovelPost($id);
 
         return response()->json([
-            'data' => PostResource::collection($novel->posts),
+            'data' => PostResource::collection($novelPosts),
         ]);
     }
 

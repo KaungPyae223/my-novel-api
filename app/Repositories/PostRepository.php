@@ -25,4 +25,11 @@ class PostRepository
         return $post;
     }
 
+    public function update($id, $data)
+    {
+        $post = $this->post->find($id);
+        $post->update($data);
+        return $post;
+    }
+
 }
