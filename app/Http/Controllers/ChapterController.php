@@ -53,10 +53,9 @@ class ChapterController extends Controller
         $last_chapter = $novel->chapters()->orderBy('id', 'desc')->first();
 
 
+        $cacheKey = 'chapter_suggestion_' . $id . '_' . ($last_chapter->id ?? 0);
 
-        $cacheKey = 'chapter_suggestion_' . $id.'_'.$last_chapter->id;
 
-        
         $response = Cache::remember($cacheKey, now()->addHours(12), function () use ($novel, $last_chapter) {
 
             $apiKey = config('ai.api_key');
@@ -71,7 +70,11 @@ class ChapterController extends Controller
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => "You are a professional writing assistant helping fiction writers improve their chapters. Respond only in valid JSON format with the following structure:
+                        'content' => "You are a professional writing assistant helping fiction writers improve their chapters.
+
+                            I also provide you a previous chapter content and novel synopsis to help you generate a better suggestion.
+
+                            Respond only in valid JSON format with the following structure:
                             {
                             \"chapter_direction\": \"Your suggestion here\",
                             \"character_development\": \"Your suggestion here\",
@@ -80,11 +83,23 @@ class ChapterController extends Controller
                             }
                             Each field should contain one helpful, concise suggestion. Do not include any extra commentary outside the JSON.
                             In the content please separate me with // if the suggestion is more than one and you can give me more than one suggestion in each field.
+
+                            ### Instructions:
+
+                            1.  **Analyze the Provided Content:** Carefully read the **novel synopsis** to understand the overarching story, themes, and character arcs. Then, read the **previous chapter's content** to grasp the current plot point, character states, and established tone.
+                            2.  **Generate Targeted Suggestions:**
+                                * **chapter_direction:** Propose how the current chapter can effectively build on the previous one. Suggest ways to control pacing, build tension, or guide the narrative toward a key event.
+                                * **character_development:** Offer ideas for deepening the characters. This could include exploring their internal conflicts, showing their growth or regression, or revealing new aspects of their personality through actions or dialogue.
+                                * **plot_enhancement:** Identify opportunities to strengthen the plot. Suggest ways to raise the stakes, introduce new conflicts, foreshadow future events, or resolve a minor plot thread.
+                                * **writing_tips:** Provide actionable advice on writing craft. Focus on improving descriptive language, strengthening dialogue, varying sentence structure, or enhancing the sensory experience for the reader.
+
+                            3.  **Format the Response:** Adhere strictly to the JSON structure provided above. Ensure all suggestions are within quotation marks and that multiple suggestions within a field are separated by `//`.
+
                             "
                     ],
                     [
                         'role' => 'user',
-                        'content' => "Here's a summary of novel: ".$novel->synopsis."\n\n Here's the content of last chapter: ".$last_chapter->content."\n\n"
+                        'content' => "Here's a summary of novel: ".$novel->synopsis."\n\n Here's the content of last chapter: ".($last_chapter->content ?? null)."\n\n"
                     ]
                 ],
             ]);
@@ -224,6 +239,35 @@ class ChapterController extends Controller
 
     }
 
+    public function translate($content,$genre,$language){
+
+        $apiKey = config('ai.api_key');
+
+        $response = Http::withOptions([
+            'proxy' => ''
+        ])->timeout(120)->withHeaders([
+            'Authorization' => 'Bearer ' . $apiKey,
+            'Content-Type' => 'application/json',
+        ])->post('https://openrouter.ai/api/v1/chat/completions', [
+            'model' => 'deepseek/deepseek-r1-0528:free',
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => "You are a professional novel translator. The genre of the novel is $genre, and your translation must accurately reflect its tone, style, and literary nuances. Return the translated text exclusively, with no added commentary, notes, or explanations. The language of the translation is $language."
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $content,
+                ],
+            ],
+        ]);
+
+        $content = $response['choices'][0]['message']['content'] ?? null;
+
+        return $content;
+
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -350,9 +394,10 @@ class ChapterController extends Controller
         ]);
      }
 
-    public function show($id)
+    public function show($id,Request $request)
     {
         $chapter = $this->ChapterRepository->findChapter($id);
+        $language = $request->input('language');
 
         if (!$chapter) {
             return response()->json([
@@ -370,6 +415,10 @@ class ChapterController extends Controller
             return response()->json([
                 'message' => 'Chapter not found',
             ], 404);
+        }
+
+        if($language){
+            $chapter->content = $this->translate($chapter->content,$chapter->novel->genre->genre,$language);
         }
 
         return response()->json([

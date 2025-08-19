@@ -42,7 +42,7 @@ class GenerateSummary implements ShouldQueue
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => "Please generate a summary for the chapter. The summary should be concise and include the main events, character development, and any important plot points. The summary should not be longer than 150 words. Please return only the summary. Do not include any extra commentary outside the summary."
+                    'content' => "Generate a concise summary of the chapter, focusing only on the main events, key character developments, and important plot points. The summary must be clear, objective, and no longer than 300 words. Return only the summary text without any additional commentary or explanation."
                 ],
                 [
                     'role' => 'user',
@@ -51,7 +51,7 @@ class GenerateSummary implements ShouldQueue
             ],
         ]);
 
-       
+
         $summary = $response['choices'][0]['message']['content'] ?? null;
 
 
