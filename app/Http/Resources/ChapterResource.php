@@ -28,12 +28,15 @@ class ChapterResource extends JsonResource
         ? $orderedChapters[$chapterIndex + 1]->id
         : null;
 
+
+
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'summary' => $this->summary,
             'content' => $this->content,
             'status' => $this->status,
-            'already_love' => true,
+            'already_love' => $this->already_loved,
             'chapter' => $chapterIndex+1,
             'novel_id' => $this->novel_id,
             'created_at' => $this->created_at,

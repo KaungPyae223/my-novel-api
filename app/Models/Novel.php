@@ -44,4 +44,9 @@ class Novel extends Model
     {
         return $this->morphMany(post::class, 'postable');
     }
+
+    public function love()
+    {
+        return $this->morphMany(Love::class, 'loveable');
+    }
 }

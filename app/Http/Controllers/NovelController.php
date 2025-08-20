@@ -137,6 +137,8 @@ class NovelController extends Controller
 
         $this->authorize('view', $novel);
 
+        $novel->already_loved = false;
+
         return response()->json([
 
             'data' => new NovelResource($novel),
@@ -166,6 +168,13 @@ class NovelController extends Controller
             ], 404);
         }
 
+        $already_loved = false;
+
+        if($user_id){
+            $already_loved = $novel->love()->where('user_id', $user_id)->exists();
+        }
+
+        $novel->already_loved = $already_loved;
 
 
         return response()->json([
@@ -341,6 +350,36 @@ class NovelController extends Controller
         return response()->json([
             'data' => PostResource::collection($novelPosts),
         ]);
+    }
+
+    public function novelLove($id)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Chapter not found',
+            ], 404);
+        }
+
+        $userID = Auth::user()->id;
+
+
+        $already_loved = $novel->love()->where('user_id', $userID)->exists();
+
+        if ($already_loved) {
+            $novel->love()->where('user_id', $userID)->delete();
+            $message = 'Novel unloved successfully';
+        }else{
+            $novel->love()->create([
+                'user_id' => $userID,
+            ]);
+            $message = 'Novel loved successfully';
+        }
+
+        return response()->json([
+            'message' => $message,
+        ], 200);
     }
 
 }

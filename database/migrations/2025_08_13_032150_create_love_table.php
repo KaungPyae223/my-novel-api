@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('love', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('loveable_id');
+            $table->string('loveable_type');
+
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+
             $table->timestamps();
         });
     }

@@ -41,6 +41,7 @@ Route::prefix("v1")->group(function () {
             Route::get('novel-chapters/{id}', 'getNovelChapters');
             Route::post('novels/create-post/{id}', 'createNovelPost');
             Route::get('novels/posts/{id}', 'getNovelPosts');
+            Route::post('novels/loved/{id}', 'novelLove');
         });
 
         Route::apiResource('chapters', ChapterController::class)->except([
@@ -53,6 +54,7 @@ Route::prefix("v1")->group(function () {
             Route::post('chapter-assessment', 'assessment');
             Route::get('chapter-status-check', 'chapterStatusCheck');
             Route::get('chapters/update-chapter-show/{id}', 'updateChapterShow');
+            Route::post('chapters/loved/{id}', 'chapterLove');
         });
 
         Route::apiResource('posts',PostController::class)->only(["destroy"]);

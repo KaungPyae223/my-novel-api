@@ -398,6 +398,7 @@ class ChapterController extends Controller
     {
         $chapter = $this->ChapterRepository->findChapter($id);
         $language = $request->input('language');
+        $readType = $request->input('read_type');
 
         if (!$chapter) {
             return response()->json([
@@ -417,12 +418,25 @@ class ChapterController extends Controller
             ], 404);
         }
 
-        if($language){
-            $chapter->content = $this->translate($chapter->content,$chapter->novel->genre->genre,$language);
+        $already_loved = false;
+
+        if($user_id){
+            $already_loved = $chapter->love()->where('user_id', $user_id)->exists();
         }
 
+        if($language){
+            if($readType == 'summary'){
+                $chapter->summary = $this->translate($chapter->summary,$chapter->novel->genre->genre,$language);
+            }else{
+                $chapter->content = $this->translate($chapter->content,$chapter->novel->genre->genre,$language);
+            }
+        }
+
+        $chapter->already_loved = $already_loved;
+
         return response()->json([
-            'data' => new ChapterResource($chapter)
+            'data' => new ChapterResource($chapter),
+
         ]);
     }
 
@@ -536,4 +550,36 @@ class ChapterController extends Controller
             'message' => 'Chapter deleted successfully',
         ], 200);
     }
+
+
+    public function chapterLove($id)
+    {
+        $chapter = $this->ChapterRepository->findChapter($id);
+
+        if (!$chapter) {
+            return response()->json([
+                'message' => 'Chapter not found',
+            ], 404);
+        }
+
+        $userID = Auth::user()->id;
+
+
+        $already_loved = $chapter->love()->where('user_id', $userID)->exists();
+
+        if ($already_loved) {
+            $chapter->love()->where('user_id', $userID)->delete();
+            $message = 'Chapter unloved successfully';
+        }else{
+            $chapter->love()->create([
+                'user_id' => $userID,
+            ]);
+            $message = 'Chapter loved successfully';
+        }
+
+        return response()->json([
+            'message' => $message,
+        ], 200);
+    }
+
 }
