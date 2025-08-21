@@ -410,6 +410,8 @@ class ChapterController extends Controller
 
         if (Auth::guard('sanctum')->check()) {
             $user_id = Auth::guard('sanctum')->user()->id;
+            $this->ChapterRepository->addView($id,$user_id);
+
         }
 
         if ($chapter->status != 'published' && !Auth::guard('sanctum')->check() && $chapter->novel->user_id != $user_id) {
@@ -580,6 +582,23 @@ class ChapterController extends Controller
         return response()->json([
             'message' => $message,
         ], 200);
+    }
+
+    public function chapterShare($id)
+    {
+        $chapter = $this->ChapterRepository->findChapter($id);
+
+        if (!$chapter) {
+            return response()->json([
+                'message' => 'Chapter not found',
+            ], 404);
+        }
+
+        $this->ChapterRepository->share($id);
+
+        return response()->json([
+            'message' => 'Chapter shared successfully',
+        ]);
     }
 
 }

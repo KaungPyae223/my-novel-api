@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Chapter;
+use Illuminate\Support\Facades\Auth;
 
 class ChapterRepository
 {
@@ -12,6 +13,8 @@ class ChapterRepository
         $this->chapter = $chapter;
     }
 
+
+
     public function findChapter($id) {
         return $this->chapter->find($id);
     }
@@ -20,9 +23,16 @@ class ChapterRepository
         return $this->chapter->create($data);
     }
 
+    public function addView($id,$user_id) {
+        $chapter = $this->findChapter($id);
+        $chapter->view()->create([
+            'user_id' => $user_id,
+        ]);
+    }
+
     public function updateChapter($id, $data) {
 
-        $chapter = $this->chapter->find($id);
+        $chapter = $this->findChapter($id);
 
         $chapter->update($data);
 
@@ -32,5 +42,12 @@ class ChapterRepository
     public function deleteChapter($id) {
         $chapter = $this->chapter->find($id);
         return $chapter->delete();
+    }
+
+    public function share($id)
+    {
+        $chapter = $this->findChapter($id);
+        $chapter->share_count++;
+        $chapter->save();
     }
 }

@@ -159,6 +159,8 @@ class NovelController extends Controller
 
         if (Auth::guard('sanctum')->check()) {
             $user_id = Auth::guard('sanctum')->user()->id;
+            $this->novelRepository->addHistory($id,$user_id);
+            $this->novelRepository->addView($id,$user_id);
         }
 
 
@@ -292,6 +294,50 @@ class NovelController extends Controller
         ]);
     }
 
+    public function novelFavorite($id)
+    {
+
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        $already_favorited = $novel->favorite()->where('user_id', Auth::user()->id)->exists();
+
+        if ($already_favorited) {
+            $this->novelRepository->removeFavorite($id);
+             $message = 'Novel unfavorited successfully';
+        }else{
+            $this->novelRepository->addFavorite($id);
+            $message = 'Novel favorited successfully';
+        }
+
+        return response()->json([
+            'message' => $message,
+        ]);
+    }
+
+    public function novelShare($id)
+    {
+
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        $this->novelRepository->share($id);
+
+        return response()->json([
+            'message' => 'Novel shared successfully',
+        ]);
+    }
+
 
     // Post
 
@@ -364,16 +410,13 @@ class NovelController extends Controller
 
         $userID = Auth::user()->id;
 
-
         $already_loved = $novel->love()->where('user_id', $userID)->exists();
 
         if ($already_loved) {
-            $novel->love()->where('user_id', $userID)->delete();
-            $message = 'Novel unloved successfully';
+            $this->novelRepository->removeLove($id);
+             $message = 'Novel unloved successfully';
         }else{
-            $novel->love()->create([
-                'user_id' => $userID,
-            ]);
+            $this->novelRepository->addLove($id);
             $message = 'Novel loved successfully';
         }
 

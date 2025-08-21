@@ -49,4 +49,19 @@ class Novel extends Model
     {
         return $this->morphMany(Love::class, 'loveable');
     }
+
+    public function view()
+    {
+        return $this->morphMany(View::class, 'viewable');
+    }
+
+    public function history()
+    {
+        return $this->hasMany(History::class, 'novel_id', 'id');
+    }
+
+    public function review()
+    {
+        return $this->hasMany(Review::class, 'novel_id', 'id');
+    }
 }

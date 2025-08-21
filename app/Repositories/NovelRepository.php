@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Novel;
+use Illuminate\Support\Facades\Auth;
 
 class NovelRepository
 {
@@ -72,6 +73,64 @@ class NovelRepository
     {
         $novel = $this->findNovel($id);
         return $novel->posts()->orderBy('created_at', 'desc')->get();
+    }
+
+    public function addView($id,$user_id)
+    {
+        $novel = $this->findNovel($id);
+        $novel->view()->create([
+            'user_id' => $user_id,
+        ]);
+    }
+
+    public function addHistory($id,$user_id)
+    {
+        $novel = $this->findNovel($id);
+
+        $findHistory = $novel->history()->where('user_id', $user_id)->exists();
+
+        if ($findHistory) {
+            return;
+        }
+
+        $novel->history()->create([
+            'user_id' => $user_id,
+        ]);
+    }
+
+    public function addLove($id)
+    {
+        $novel = $this->findNovel($id);
+        $novel->love()->create([
+            'user_id' => Auth::user()->id,
+        ]);
+    }
+
+    public function removeLove($id)
+    {
+        $novel = $this->findNovel($id);
+        $novel->love()->where('user_id', Auth::user()->id)->delete();
+    }
+
+    public function addFavorite($id)
+    {
+        $novel = $this->findNovel($id);
+        $novel->favorite()->create([
+            'user_id' => Auth::user()->id,
+        ]);
+    }
+
+    public function removeFavorite($id)
+    {
+        $novel = $this->findNovel($id);
+        $novel->favorite()->where('user_id', Auth::user()->id)->delete();
+    }
+
+    public function share($id)
+    {
+        $novel = $this->findNovel($id);
+        $novel->share_count++;
+        $novel->save();
     }
 
 }

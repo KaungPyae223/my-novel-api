@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('views', function (Blueprint $table) {
+        Schema::create('favorites', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('viewable_id');
-            $table->string('viewable_type');
-
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-
+            $table->foreignId('novel_id')->constrained('novels')->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('views');
+        Schema::dropIfExists('favorites');
     }
 };

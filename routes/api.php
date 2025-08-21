@@ -42,6 +42,7 @@ Route::prefix("v1")->group(function () {
             Route::post('novels/create-post/{id}', 'createNovelPost');
             Route::get('novels/posts/{id}', 'getNovelPosts');
             Route::post('novels/loved/{id}', 'novelLove');
+            Route::post('novels/favorite/{id}', 'novelFavorite');
         });
 
         Route::apiResource('chapters', ChapterController::class)->except([
@@ -68,11 +69,16 @@ Route::prefix("v1")->group(function () {
     Route::controller(NovelController::class)->group(function () {
         Route::get('user/novels/{id}', 'showUserNovel');
         Route::get('user/novel-chapters/{id}', 'showUserNovelChapter');
+        Route::post('novels/share/{id}', 'novelShare');
     });
 
     Route::apiResource('chapters', ChapterController::class)->only([
         'show',
     ]);
+
+    Route::controller(ChapterController::class)->group(function () {
+        Route::post('chapters/share/{id}', 'chapterShare');
+    });
 
 
 
