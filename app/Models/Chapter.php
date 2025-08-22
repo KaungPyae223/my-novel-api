@@ -24,6 +24,11 @@ class Chapter extends Model
         return $this->belongsTo(Novel::class, 'novel_id', 'id');
     }
 
+    public function view()
+    {
+        return $this->morphMany(View::class, 'viewable');
+    }
+
     public function love()
     {
         return $this->morphMany(Love::class, 'loveable');

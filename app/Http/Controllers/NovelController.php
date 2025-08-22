@@ -19,7 +19,7 @@ use App\Repositories\PostRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\RateLimiter;
 
 class NovelController extends Controller
 {
@@ -320,9 +320,9 @@ class NovelController extends Controller
         ]);
     }
 
+
     public function novelShare($id)
     {
-
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
@@ -330,6 +330,15 @@ class NovelController extends Controller
                 'message' => 'Novel not found',
             ], 404);
         }
+
+        $userId = Auth::guard('sanctum')->user()->id ?? request()->ip();
+        $key = "novel-share:{$userId}";
+
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            return;
+        }
+
+        RateLimiter::hit($key, 60*60); // allow 5 attempts per 60 seconds
 
         $this->novelRepository->share($id);
 
@@ -339,6 +348,7 @@ class NovelController extends Controller
     }
 
 
+
     // Post
 
 
@@ -346,8 +356,6 @@ class NovelController extends Controller
     {
 
         $novel = $this->novelRepository->findNovel($id);
-
-
 
         if (!$novel) {
             return response()->json([

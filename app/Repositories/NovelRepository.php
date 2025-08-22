@@ -78,9 +78,14 @@ class NovelRepository
     public function addView($id,$user_id)
     {
         $novel = $this->findNovel($id);
-        $novel->view()->create([
-            'user_id' => $user_id,
-        ]);
+
+        $last_view = $novel->view()->where('user_id', $user_id)->latest()->first() ;
+
+        if(!$last_view || $last_view->created_at->diffInMinutes(now()) >= 5){
+            $novel->view()->create([
+                'user_id' => $user_id,
+            ]);
+        }
     }
 
     public function addHistory($id,$user_id)

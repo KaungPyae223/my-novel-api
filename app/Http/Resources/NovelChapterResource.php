@@ -18,7 +18,7 @@ class NovelChapterResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'status' => $this->status,
-            'view_count' => 100,
+            'view_count' => $this->view->count(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

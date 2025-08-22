@@ -24,12 +24,17 @@ class ChapterRepository
     }
 
     public function addView($id,$user_id) {
-        $chapter = $this->findChapter($id);
-        $chapter->view()->create([
-            'user_id' => $user_id,
-        ]);
-    }
 
+        $chapter = $this->findChapter($id);
+
+        $last_view = $chapter->view()->where('user_id', $user_id)->latest()->first() ;
+
+        if(!$last_view || $last_view->created_at->diffInMinutes(now()) >= 5){
+            $chapter->view()->create([
+                'user_id' => $user_id,
+            ]);
+        }
+    }
     public function updateChapter($id, $data) {
 
         $chapter = $this->findChapter($id);

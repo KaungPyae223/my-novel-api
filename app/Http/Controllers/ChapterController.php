@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\RateLimiter;
 
 class ChapterController extends Controller
 {
@@ -594,11 +595,21 @@ class ChapterController extends Controller
             ], 404);
         }
 
+        $userId = Auth::guard('sanctum')->user()->id ?? request()->ip();
+        $key = "chapter-share:{$userId}";
+
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            return;
+        }
+
+        RateLimiter::hit($key, 60*60); // allow 5 attempts per 60 seconds
+
         $this->ChapterRepository->share($id);
 
         return response()->json([
             'message' => 'Chapter shared successfully',
         ]);
     }
+
 
 }

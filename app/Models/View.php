@@ -9,4 +9,8 @@ class View extends Model
 {
     /** @use HasFactory<\Database\Factories\ViewFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+    ];
 }
