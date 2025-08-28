@@ -9,7 +9,7 @@ use App\Jobs\DeleteImage;
 use App\Models\Post;
 use App\Repositories\PostRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-
+use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
@@ -112,5 +112,37 @@ class PostController extends Controller
         return response()->json([
             'message' => 'Post deleted successfully',
         ]);
+    }
+
+    public function postLove($id)
+    {
+
+        $post = $this->postRepository->findPost($id);
+
+        if (!$post) {
+            return response()->json([
+                'message' => 'Chapter not found',
+            ], 404);
+        }
+
+        $userID = Auth::user()->id;
+
+
+        $already_loved = $post->love()->where('user_id', $userID)->exists();
+
+        if ($already_loved) {
+            $post->love()->where('user_id', $userID)->delete();
+            $message = 'Post unloved successfully';
+        }else{
+            $post->love()->create([
+                'user_id' => $userID,
+            ]);
+            $message = 'Post loved successfully';
+        }
+
+        return response()->json([
+            'message' => $message,
+        ], 200);
+
     }
 }

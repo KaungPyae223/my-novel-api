@@ -13,4 +13,9 @@ class History extends Model
     protected $fillable = [
         'user_id',
     ];
+
+    public function novel()
+    {
+        return $this->belongsTo(Novel::class);
+    }
 }

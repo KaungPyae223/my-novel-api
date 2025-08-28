@@ -33,4 +33,6 @@ class Chapter extends Model
     {
         return $this->morphMany(Love::class, 'loveable');
     }
+
+   
 }

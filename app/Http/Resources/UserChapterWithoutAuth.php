@@ -5,6 +5,8 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+use App\Http\Utils\ShortNumber;
+
 class UserChapterWithoutAuth extends JsonResource
 {
     /**
@@ -18,7 +20,7 @@ class UserChapterWithoutAuth extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'status' => $this->status,
-            'view_count' => $this->view->count(),
+            'view_count' => ShortNumber::number_shorten($this->view->count()),
             'view_at' => null,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

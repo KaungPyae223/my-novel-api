@@ -1,0 +1,3 @@
+1. Need to add the rank with the user follow.
+2. Need to add  with the followers in user novel
+3. Need to add the share count in user novel

@@ -12,8 +12,8 @@ use App\Http\Resources\UserChapterWithAuth;
 use App\Http\Resources\UserChapterWithoutAuth;
 use App\Http\Utils\GenerateUniqueName;
 use App\Http\Utils\ImageUtils;
+use App\Http\Utils\ShortNumber;
 use App\Jobs\DeleteImage;
-use App\Models\Novel;
 use App\Repositories\NovelRepository;
 use App\Repositories\PostRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -265,6 +265,29 @@ class NovelController extends Controller
         return response()->json([
             'data' => NovelResource::collection($novels),
         ]);
+    }
+
+    public function getMyNovelsKPI()
+    {
+
+        $user = Auth::user();
+
+
+        $totalNovels = $user->novels->count();
+        $totalViews = $user->novels->flatMap->view->count();
+        $totalLoves = $user->novels->flatMap->love->count();
+        $totalShares = $user->novels->sum('share_count');
+
+
+
+        return response()->json([
+            'totalNovels' => $totalNovels,
+            'totalViews' => ShortNumber::number_shorten($totalViews),
+            'totalLoves' => ShortNumber::number_shorten($totalLoves),
+            'totalShares' => ShortNumber::number_shorten($totalShares),
+        ]);
+
+
     }
 
     /**

@@ -516,8 +516,6 @@ class ChapterController extends Controller
             ]);
         }
 
-
-
         $chapter = $this->ChapterRepository->updateChapter($id, $request->all());
 
         return response()->json([
@@ -557,6 +555,7 @@ class ChapterController extends Controller
 
     public function chapterLove($id)
     {
+
         $chapter = $this->ChapterRepository->findChapter($id);
 
         if (!$chapter) {
@@ -583,6 +582,7 @@ class ChapterController extends Controller
         return response()->json([
             'message' => $message,
         ], 200);
+
     }
 
     public function chapterShare($id)
@@ -610,6 +610,5 @@ class ChapterController extends Controller
             'message' => 'Chapter shared successfully',
         ]);
     }
-
 
 }

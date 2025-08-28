@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NovelController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\UserController;
@@ -43,6 +44,7 @@ Route::prefix("v1")->group(function () {
             Route::get('novels/posts/{id}', 'getNovelPosts');
             Route::post('novels/loved/{id}', 'novelLove');
             Route::post('novels/favorite/{id}', 'novelFavorite');
+            Route::get('my-novels/kpi', 'getMyNovelsKPI');
         });
 
         Route::apiResource('chapters', ChapterController::class)->except([
@@ -61,6 +63,13 @@ Route::prefix("v1")->group(function () {
         Route::apiResource('posts',PostController::class)->only(["destroy"]);
         Route::controller(PostController::class)->group(function () {
             Route::post('posts/{id}', 'update');
+            Route::post('posts/loved/{id}', 'postLove');
+        });
+
+        Route::controller(HomeController::class)->group(function () {
+            Route::get('recommend-novels', 'recommendNovels');
+            Route::get('recommend-chapters', 'recommendChapters');
+            Route::get('recommend-posts', 'recommendPosts');
         });
 
     });

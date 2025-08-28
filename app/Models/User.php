@@ -63,4 +63,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Novel::class, 'user_id', 'id');
     }
+
+    public function histories()
+    {
+        return $this->hasMany(History::class, 'user_id', 'id');
+    }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class, 'user_id', 'id');
+    }
 }
