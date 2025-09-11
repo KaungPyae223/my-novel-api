@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\CreateLog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -9,6 +10,8 @@ class Chapter extends Model
 {
     /** @use HasFactory<\Database\Factories\ChapterFactory> */
     use HasFactory;
+
+    use CreateLog;
 
     protected $fillable = [
         'title',
@@ -39,5 +42,9 @@ class Chapter extends Model
         return $this->morphMany(History::class, 'historyable');
     }
 
+    public function log()
+    {
+        return $this->morphMany(Log::class, 'logable');
+    }
 
 }

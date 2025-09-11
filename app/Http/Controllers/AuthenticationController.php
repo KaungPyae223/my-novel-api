@@ -11,18 +11,23 @@ use Illuminate\Support\Facades\Hash;
 class AuthenticationController extends Controller
 {
     public function register(Request $request) {
+
+        $request->merge([
+            'username' => '@'.$request->username,
+        ]);
+
         $request->validate([
             'full_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'username' => 'required|string|max:255|unique:users,username',
+            'username' => 'required|string|max:255|unique:users,username|regex:/^\S+$/',
         ]);
 
         $user = User::create([
             'full_name' => $request->full_name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'username' => '@'.$request->username,
+            'username' => $request->username,
         ]);
 
         $token = $user->createToken('api-token')->plainTextToken;

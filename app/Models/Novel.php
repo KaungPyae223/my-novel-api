@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\CreateLog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -9,6 +10,8 @@ class Novel extends Model
 {
     /** @use HasFactory<\Database\Factories\NovelFactory> */
     use HasFactory;
+
+    use CreateLog;
 
     protected $fillable = [
         'title',
@@ -68,5 +71,10 @@ class Novel extends Model
     public function favorite()
     {
         return $this->hasMany(Favorite::class, 'novel_id', 'id');
+    }
+
+    public function log()
+    {
+        return $this->morphMany(Log::class, 'logable');
     }
 }
