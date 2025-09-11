@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('love', function (Blueprint $table) {
+        Schema::create('logs', function (Blueprint $table) {
             $table->id();
-            $table->morphs('loveable');
-
+            $table->morphs('logable');
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-
+            $table->string('action');
+            $table->string('ip_address')->nullable();
+            $table->string('user_agent')->nullable();
+            $table->longText('description')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('love');
+        Schema::dropIfExists('logs');
     }
 };

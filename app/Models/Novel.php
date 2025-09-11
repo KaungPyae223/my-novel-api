@@ -57,11 +57,16 @@ class Novel extends Model
 
     public function history()
     {
-        return $this->hasMany(History::class, 'novel_id', 'id');
+        return $this->morphMany(History::class, 'historyable');
     }
 
     public function review()
     {
         return $this->hasMany(Review::class, 'novel_id', 'id');
+    }
+
+    public function favorite()
+    {
+        return $this->hasMany(Favorite::class, 'novel_id', 'id');
     }
 }

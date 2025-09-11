@@ -28,6 +28,7 @@ return new class extends Migration
             $table->text('youtube')->nullable();
             $table->string('profile_image_public_id')->nullable();
             $table->string('cover_image_public_id')->nullable();
+            $table->boolean('save_history')->default(true);
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

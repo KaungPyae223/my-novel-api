@@ -32,6 +32,7 @@ class HomeNovelResource extends JsonResource
             'tags' => $this->tags,
             'created_at' => $this->created_at->diffForHumans(),
             'already_loved' => $this->love()->where('user_id', $request->user()->id)->exists(),
+            'already_favorited' => $this->favorite()->where('user_id', $request->user()->id)->exists(),
         ];
     }
 }

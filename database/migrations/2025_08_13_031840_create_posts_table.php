@@ -16,10 +16,7 @@ return new class extends Migration
             $table->text('content');
             $table->string('image')->nullable();
             $table->string('image_public_id')->nullable();
-
-            $table->unsignedBigInteger('postable_id');
-            $table->string('postable_type');
-
+            $table->morphs('postable');
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
 
             $table->timestamps();

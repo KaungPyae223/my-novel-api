@@ -13,8 +13,7 @@ return new class extends Migration
     {
         Schema::create('views', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('viewable_id');
-            $table->string('viewable_type');
+            $table->morphs('viewable');
 
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
 

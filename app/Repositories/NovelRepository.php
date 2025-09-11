@@ -88,19 +88,21 @@ class NovelRepository
         }
     }
 
-    public function addHistory($id,$user_id)
+    public function addHistory($id, $user_id)
     {
         $novel = $this->findNovel($id);
 
-        $findHistory = $novel->history()->where('user_id', $user_id)->exists();
-
-        if ($findHistory) {
+        $user = Auth::user();
+        if (!$user || !$user->save_history) {
             return;
         }
 
-        $novel->history()->create([
-            'user_id' => $user_id,
-        ]);
+        $alreadyExists = $novel->history()->where('user_id', $user_id)->exists();
+        if ($alreadyExists) {
+            return;
+        }
+
+        $novel->history()->create(['user_id' => $user_id]);
     }
 
     public function addLove($id)

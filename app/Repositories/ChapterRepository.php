@@ -23,6 +23,25 @@ class ChapterRepository
         return $this->chapter->create($data);
     }
 
+    public function addHistory($id, $user_id)
+    {
+        $chapter = $this->findChapter($id);
+
+        $user = Auth::user();
+        if (!$user || !$user->save_history) {
+            return;
+        }
+
+        $alreadyExists = $chapter->history()->where('user_id', $user_id)->exists();
+        if ($alreadyExists) {
+            return;
+        }
+
+        $chapter->history()->create(['user_id' => $user_id]);
+    }
+
+
+
     public function addView($id,$user_id) {
 
         $chapter = $this->findChapter($id);

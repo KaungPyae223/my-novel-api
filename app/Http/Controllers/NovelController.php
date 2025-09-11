@@ -155,13 +155,7 @@ class NovelController extends Controller
             ], 404);
         }
 
-        $user_id = null;
 
-        if (Auth::guard('sanctum')->check()) {
-            $user_id = Auth::guard('sanctum')->user()->id;
-            $this->novelRepository->addHistory($id,$user_id);
-            $this->novelRepository->addView($id,$user_id);
-        }
 
 
         if ($novel->status != 'published' && !Auth::guard('sanctum')->check() && $novel->user_id != $user_id) {
@@ -170,13 +164,24 @@ class NovelController extends Controller
             ], 404);
         }
 
+        $user_id = null;
+
+        if (Auth::guard('sanctum')->check()) {
+            $user_id = Auth::guard('sanctum')->user()->id;
+            $this->novelRepository->addHistory($id,$user_id);
+            $this->novelRepository->addView($id,$user_id);
+        }
+
         $already_loved = false;
+        $already_favorited = false;
 
         if($user_id){
             $already_loved = $novel->love()->where('user_id', $user_id)->exists();
+            $already_favorited = $novel->favorite()->where('user_id', $user_id)->exists();
         }
 
         $novel->already_loved = $already_loved;
+        $novel->already_favorited = $already_favorited;
 
 
         return response()->json([
@@ -355,7 +360,7 @@ class NovelController extends Controller
         }
 
         $userId = Auth::guard('sanctum')->user()->id ?? request()->ip();
-        $key = "novel-share:{$userId}";
+        $key = "novel-share:{$userId}:{$id}";
 
         if (RateLimiter::tooManyAttempts($key, 1)) {
             return;
@@ -422,6 +427,14 @@ class NovelController extends Controller
             ], 404);
         }
 
+        $user_id = null;
+
+        if (Auth::guard('sanctum')->check()) {
+            $user_id = Auth::guard('sanctum')->user()->id;
+        }
+
+
+
         $novelPosts = $this->novelRepository->getNovelPost($id);
 
         return response()->json([
@@ -455,5 +468,6 @@ class NovelController extends Controller
             'message' => $message,
         ], 200);
     }
+
 
 }

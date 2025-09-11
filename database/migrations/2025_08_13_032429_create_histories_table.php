@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('novel_id')->constrained('novels')->cascadeOnDelete();
+            $table->morphs('historyable');
+
             $table->timestamps();
         });
     }
