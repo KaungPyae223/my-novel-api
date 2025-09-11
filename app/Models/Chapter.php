@@ -5,8 +5,9 @@ namespace App\Models;
 use App\Traits\CreateLog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Chapter extends Model
+class Chapter extends Model implements SoftDeletes
 {
     /** @use HasFactory<\Database\Factories\ChapterFactory> */
     use HasFactory;

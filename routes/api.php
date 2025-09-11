@@ -7,7 +7,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NovelController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\UserController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix("v1")->group(function () {
@@ -16,9 +15,15 @@ Route::prefix("v1")->group(function () {
         Route::post('/login', 'login');
         Route::post('/register', 'register');
         Route::get('/check-username', 'check_username');
+        Route::get('/email/verify/{id}/{hash}', 'verifyEmail')->middleware(['signed'])->name('verification.verify');
     });
 
+
+
     Route::middleware('auth:sanctum')->group(function () {
+
+        Route::post('/send-verification-email', [AuthenticationController::class, 'SendVerificationEmail']);
+
         Route::post('/logout', [AuthenticationController::class, 'logout']);
 
         Route::controller(UserController::class)->group(function () {
@@ -93,3 +98,5 @@ Route::prefix("v1")->group(function () {
 
 
 });
+
+

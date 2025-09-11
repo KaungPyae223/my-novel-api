@@ -20,6 +20,7 @@ return new class extends Migration
             $table->text('summary')->nullable();
             $table->integer('share_count')->default(0);
             $table->timestamp('scheduled_date')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
+use App\Mail\VerificationMail;
 use App\Models\User;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 class AuthenticationController extends Controller
 {
@@ -60,6 +65,42 @@ class AuthenticationController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged out successfully']);
+    }
+
+    public function SendVerificationEmail(Request $request)
+    {
+
+        $user = Auth::user();
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(15),
+            ['id' => $user->id, 'hash' => sha1($user->email)]
+        );
+
+        Mail::to($user->email)->send(new VerificationMail($verificationUrl, $user));
+
+        return response()->json(['message' => 'Send Verification Email']);
+    }
+
+    public function verifyEmail($id, $hash)
+    {
+        $user = User::find($id);
+
+        if (! $user) {
+            return response()->json(['message' => 'User not found.'], 404);
+        }
+
+        if (! hash_equals((string) $hash, sha1($user->email))) {
+            return response()->json(['message' => 'Invalid verification link.'], 400);
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+            event(new Verified($user));
+        }
+
+        return redirect()->away(config('ai.app_url').'/verify-email');
     }
 
 }
