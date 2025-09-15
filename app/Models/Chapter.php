@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Chapter extends Model implements SoftDeletes
+class Chapter extends Model
 {
     /** @use HasFactory<\Database\Factories\ChapterFactory> */
-    use HasFactory;
+    use HasFactory,SoftDeletes;
 
     use CreateLog;
 

@@ -100,7 +100,7 @@ class AuthenticationController extends Controller
             event(new Verified($user));
         }
 
-        return redirect()->away(config('ai.app_url').'/verify-email');
+        return redirect()->away(config('ai.app_url').'/verified-email');
     }
 
 }

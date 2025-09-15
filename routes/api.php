@@ -22,9 +22,10 @@ Route::prefix("v1")->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
 
-        Route::post('/send-verification-email', [AuthenticationController::class, 'SendVerificationEmail']);
-
-        Route::post('/logout', [AuthenticationController::class, 'logout']);
+        Route::controller(AuthenticationController::class)->group(function () {
+            Route::post('/send-verification-mail', 'SendVerificationEmail');
+            Route::post('/logout', 'logout');
+        });
 
         Route::controller(UserController::class)->group(function () {
             Route::get('/author/{id}', 'show');
@@ -40,30 +41,35 @@ Route::prefix("v1")->group(function () {
             'store',
         ]);
 
-        Route::apiResource('novels', NovelController::class);
+        Route::middleware(['verified'])->group(function () {
+            Route::apiResource('novels', NovelController::class);
+            Route::controller(NovelController::class)->group(function () {
+                Route::post('novels/upload-image/{id}', 'novelImageUpload');
+                Route::get('my-novels', 'getMyNovels');
+                Route::get('novel-chapters/{id}', 'getNovelChapters');
+                Route::post('novels/create-post/{id}', 'createNovelPost');
+                Route::get('my-novels/kpi', 'getMyNovelsKPI');
+            });
+        });
         Route::controller(NovelController::class)->group(function () {
-            Route::post('novels/upload-image/{id}', 'novelImageUpload');
-            Route::get('my-novels', 'getMyNovels');
-            Route::get('novel-chapters/{id}', 'getNovelChapters');
-            Route::post('novels/create-post/{id}', 'createNovelPost');
             Route::post('novels/loved/{id}', 'novelLove');
             Route::post('novels/favorite/{id}', 'novelFavorite');
-            Route::get('my-novels/kpi', 'getMyNovelsKPI');
-
         });
 
-        Route::apiResource('chapters', ChapterController::class)->except([
-            'index', 'show'
-        ]);
-        Route::controller(ChapterController::class)->group(function () {
-            Route::get('chapters/generate-suggestion/{id}', 'generateSuggestion');
-            Route::get('chapters/draft-count/{id}', 'draftCount');
-            Route::post('grammar-check', 'grammarCheck');
-            Route::post('chapter-assessment', 'assessment');
-            Route::get('chapter-status-check', 'chapterStatusCheck');
-            Route::get('chapters/update-chapter-show/{id}', 'updateChapterShow');
-            Route::post('chapters/loved/{id}', 'chapterLove');
+        Route::middleware(['verified'])->group(function () {
+            Route::apiResource('chapters', ChapterController::class)->except([
+                'index', 'show'
+            ]);
+            Route::controller(ChapterController::class)->group(function () {
+                Route::get('chapters/generate-suggestion/{id}', 'generateSuggestion');
+                Route::get('chapters/draft-count/{id}', 'draftCount');
+                Route::post('grammar-check', 'grammarCheck');
+                Route::post('chapter-assessment', 'assessment');
+                Route::get('chapter-status-check', 'chapterStatusCheck');
+                Route::get('chapters/update-chapter-show/{id}', 'updateChapterShow');
+            });
         });
+        Route::post('chapters/loved/{id}', [ChapterController::class, 'chapterLove']);
 
         Route::apiResource('posts',PostController::class)->only(["destroy"]);
         Route::controller(PostController::class)->group(function () {
@@ -87,15 +93,10 @@ Route::prefix("v1")->group(function () {
         Route::post('novels/share/{id}', 'novelShare');
     });
 
-    Route::apiResource('chapters', ChapterController::class)->only([
-        'show',
-    ]);
-
     Route::controller(ChapterController::class)->group(function () {
         Route::post('chapters/share/{id}', 'chapterShare');
+        Route::get('chapters/{id}', 'show');
     });
-
-
 
 });
 

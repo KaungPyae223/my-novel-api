@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Novel extends Model implements SoftDeletes
+class Novel extends Model
 {
     /** @use HasFactory<\Database\Factories\NovelFactory> */
-    use HasFactory;
+    use HasFactory,SoftDeletes;
 
     use CreateLog;
 
