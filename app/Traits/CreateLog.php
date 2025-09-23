@@ -4,12 +4,14 @@ namespace App\Traits;
 
 use App\Models\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log as FacadesLog;
 
 trait CreateLog
 {
     public static function bootCreateLog()
     {
         static::created(function ($model) {
+
             Log::create([
                 'logable_id' => $model->id,
                 'logable_type' => get_class($model),

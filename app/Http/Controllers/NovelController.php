@@ -14,6 +14,7 @@ use App\Http\Utils\GenerateUniqueName;
 use App\Http\Utils\ImageUtils;
 use App\Http\Utils\ShortNumber;
 use App\Jobs\DeleteImage;
+use App\Models\Novel;
 use App\Repositories\NovelRepository;
 use App\Repositories\PostRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -62,13 +63,13 @@ class NovelController extends Controller
 
         $uploadImage = $request->file('cover_image');
 
-        $uploaded = ImageUtils::uploadImage($uploadImage);
+        // $uploaded = ImageUtils::uploadImage($uploadImage);
 
         $request->merge([
             'unique_name' => $unique_name,
             'user_id' => Auth::user()->id,
-            'image' => $uploaded["imageUrl"],
-            'image_public_id' => $uploaded["publicId"],
+            'image' => "abcd",
+            'image_public_id' => "abcd",
         ]);
 
         $novel = $this->novelRepository->create($request->all());

@@ -16,6 +16,8 @@ class Log extends Model
         'ip_address',
         'user_agent',
         'description',
+        'logable_id',
+        'logable_type',
     ];
 
     public function logable()
