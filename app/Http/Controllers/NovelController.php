@@ -63,13 +63,13 @@ class NovelController extends Controller
 
         $uploadImage = $request->file('cover_image');
 
-        // $uploaded = ImageUtils::uploadImage($uploadImage);
+        $uploaded = ImageUtils::uploadImage($uploadImage);
 
         $request->merge([
             'unique_name' => $unique_name,
             'user_id' => Auth::user()->id,
-            'image' => "abcd",
-            'image_public_id' => "abcd",
+            'image' => $uploaded["imageUrl"],
+            'image_public_id' => $uploaded["publicId"],
         ]);
 
         $novel = $this->novelRepository->create($request->all());
