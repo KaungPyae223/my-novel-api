@@ -64,8 +64,13 @@ class ChapterRepository
     }
 
     public function deleteChapter($id) {
-        $chapter = $this->chapter->find($id);
-        return $chapter->delete();
+        $chapter = $this->chapter->withTrashed()->find($id);
+
+        if ($chapter->trashed()) {
+            return $chapter->forceDelete();
+        }else{
+            return $chapter->delete();
+        }
     }
 
     public function share($id)

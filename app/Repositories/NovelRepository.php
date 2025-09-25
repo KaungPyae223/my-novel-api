@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Jobs\DeleteImage;
 use App\Models\Novel;
 use Illuminate\Support\Facades\Auth;
 
@@ -58,8 +59,16 @@ class NovelRepository
 
     public function delete($id)
     {
-        $novel = $this->novel->find($id);
-        return $novel->delete();
+        $novel = $this->novel->withTrashed()->find($id);
+
+        if ($novel->trashed()) {
+            if ($novel->image_public_id) {
+                dispatch(new DeleteImage($novel->image_public_id));
+            }
+            return $novel->forceDelete();
+        }else{
+            return $novel->delete();
+        }
     }
 
     public function createNovelPost($id,$data)

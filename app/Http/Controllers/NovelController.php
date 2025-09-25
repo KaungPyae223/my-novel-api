@@ -312,9 +312,6 @@ class NovelController extends Controller
 
         $this->authorize('delete', $novel);
 
-        if ($novel->image_public_id) {
-            dispatch(new DeleteImage($novel->image_public_id));
-        }
 
         $this->novelRepository->delete($novel->id);
 
