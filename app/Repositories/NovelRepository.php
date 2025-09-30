@@ -82,26 +82,27 @@ class NovelRepository
         $q = $request->input('q', '');
 
         $novel = $this->novel->withTrashed()->find($id);
-        
+        $novelID = $novel->id;
+           
         $logs = Log::query();
         
         if($model == 'novel'){
-            $novelID = $novel->id;
             $logs->where(function ($query) use ($novelID) {
                 $query->where('logable_type', Novel::class)
-                    ->where('logable_id', $novelID);
+                    ->where('parentable_id', $novelID)
+                    ->where('parentable_type', Novel::class);
             });
         } else if($model == 'chapters') {
-            $chapterID = $novel->chapters()->pluck('id');
-            $logs->where(function ($query) use ($chapterID) {
+            $logs->where(function ($query) use ($novelID) {
                 $query->where('logable_type', Chapter::class)
-                    ->whereIn('logable_id', $chapterID);
+                    ->where('parentable_id', $novelID)
+                    ->where('parentable_type', Novel::class);
             });
         } else {
-            $postID = $novel->posts()->pluck('id');
-            $logs->where(function ($query) use ($postID) {
+            $logs->where(function ($query) use ($novelID) {
                 $query->where('logable_type', Post::class)
-                    ->whereIn('logable_id', $postID);
+                    ->where('parentable_id', $novelID)
+                    ->where('parentable_type', Novel::class);
             });
         }
 

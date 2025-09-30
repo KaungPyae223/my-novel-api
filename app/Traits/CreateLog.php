@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Models\Log;
+use App\Models\Novel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log as FacadesLog;
 
@@ -12,13 +13,24 @@ trait CreateLog
     {
         static::created(function ($model) {
 
+            $parent = null;
+            if ($model instanceof Novel) {
+                $parent = $model;
+            } elseif (isset($model->novel)) {
+                $parent = $model->novel;
+            } else {
+                $parent = null;
+            }
+
             Log::create([
                 'title' => $model->title ?? null,
                 'logable_id' => $model->id,
                 'logable_type' => get_class($model),
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-                'user_id' => Auth::user()->id ?? 1,
+                'parentable_id' => $parent->id ?? null,
+                'parentable_type' => get_class($parent) ?? null,
+                'ip_address' => request()->ip() ?? "system",
+                'user_agent' => request()->userAgent() ?? "system",
+                'user_id' => Auth::user()->id ?? null,
                 'description' => json_encode($model->getAttributes()),
                 'action' => 'created',
             ]);
@@ -37,29 +49,52 @@ trait CreateLog
                 }
             }
 
+            $parent = null;
+            if ($model instanceof Novel) {
+                $parent = $model;
+            } elseif (isset($model->novel)) {
+                $parent = $model->novel;
+            } else {
+                $parent = null;
+            }
+
             if (!empty($changes)) {
                 Log::create([
                     'title' => $model->title ?? null,
                     'logable_id' => $model->id,
                     'logable_type' => get_class($model),
-                    'ip_address' => request()->ip(),
-                    'user_agent' => request()->userAgent(),
-                    'user_id' => Auth::id() ?? 1,
+                    'parentable_id' => $parent->id ?? null,
+                    'parentable_type' => get_class($parent) ?? null,
+                    'ip_address' => request()->ip() ?? "system",
+                    'user_agent' => request()->userAgent() ?? "system",
+                    'user_id' => Auth::user()->id ?? null,
                     'description' => json_encode($changes, JSON_UNESCAPED_UNICODE),
-                    'action' => 'updated',
+                    'action' => isset($changes['deleted_at']) ? 'restored' : 'updated',
                 ]);
             }
         });
         static::deleted(function ($model) {
+
+            $parent = null;
+            if ($model instanceof Novel) {
+                $parent = $model;
+            } elseif (isset($model->novel)) {
+                $parent = $model->novel;
+            } else {
+                $parent = null;
+            }
+
             Log::create([
                 'title' => $model->title ?? null,
                 'logable_id' => $model->id,
                 'logable_type' => get_class($model),
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-                'user_id' => Auth::user()->id ?? 1,
+                'parentable_id' => $parent->id ?? null,
+                'parentable_type' => get_class($parent) ?? null,
+                'ip_address' => request()->ip() ?? "system",
+                'user_agent' => request()->userAgent() ?? "system",
+                'user_id' => Auth::user()->id ?? null,
                 'description' => json_encode($model->getAttributes()),
-                'action' => 'deleted',
+                'action' => $model->trashed() ? 'trashed' : 'deleted',
             ]);
         });
     }

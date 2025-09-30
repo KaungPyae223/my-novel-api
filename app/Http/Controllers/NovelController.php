@@ -232,9 +232,7 @@ class NovelController extends Controller
 
         $logs = $this->novelRepository->getNovelLogs($id,$request);
 
-        return response()->json([
-            'data' => $logs,
-        ]);
+        return response()->json($logs);
 
     }
 

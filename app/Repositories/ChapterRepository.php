@@ -19,6 +19,10 @@ class ChapterRepository
         return $this->chapter->find($id);
     }
 
+    public function findChapterWithTrash($id) {
+        return $this->chapter->withTrashed()->find($id);
+    }
+
     public function createChapter($data) {
         return $this->chapter->create($data);
     }
@@ -70,6 +74,14 @@ class ChapterRepository
             return $chapter->forceDelete();
         }else{
             return $chapter->delete();
+        }
+    }
+
+    public function restoreChapter($id) {
+        $chapter = $this->chapter->withTrashed()->find($id);
+
+        if ($chapter->trashed()) {
+            return $chapter->restore();
         }
     }
 

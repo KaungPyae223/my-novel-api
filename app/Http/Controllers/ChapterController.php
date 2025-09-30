@@ -531,7 +531,7 @@ class ChapterController extends Controller
      */
     public function destroy($id)
     {
-        $chapter = $this->ChapterRepository->findChapter($id);
+        $chapter = $this->ChapterRepository->findChapterWithTrash($id);
 
         if(!$chapter){
             return response()->json([
@@ -551,6 +551,25 @@ class ChapterController extends Controller
 
         return response()->json([
             'message' => 'Chapter deleted successfully',
+        ], 200);
+    }
+
+    public function restoreChapter($id)
+    {
+        $chapter = $this->ChapterRepository->findChapterWithTrash($id);
+
+        if(!$chapter){
+            return response()->json([
+                'message' => 'Chapter not found',
+            ], 404);
+        }
+
+        $this->authorize('delete', $chapter);
+
+        $this->ChapterRepository->restoreChapter($id);
+
+        return response()->json([
+            'message' => 'Chapter restored successfully',
         ], 200);
     }
 

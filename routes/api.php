@@ -68,6 +68,7 @@ Route::prefix("v1")->group(function () {
                 Route::post('chapter-assessment', 'assessment');
                 Route::get('chapter-status-check', 'chapterStatusCheck');
                 Route::get('chapters/update-chapter-show/{id}', 'updateChapterShow');
+                Route::post('chapters/restore/{id}', 'restoreChapter');
             });
         });
         Route::post('chapters/loved/{id}', [ChapterController::class, 'chapterLove']);

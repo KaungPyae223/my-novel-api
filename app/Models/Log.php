@@ -19,9 +19,16 @@ class Log extends Model
         'description',
         'logable_id',
         'logable_type',
+        'parentable_id',
+        'parentable_type',
     ];
 
     public function logable()
+    {
+        return $this->morphTo();
+    }
+
+    public function parentable()
     {
         return $this->morphTo();
     }

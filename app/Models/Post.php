@@ -42,6 +42,6 @@ class Post extends Model
 
     public function novel()
     {
-        return $this->belongsTo(Novel::class,'postable_id');
+        return $this->belongsTo(Novel::class,'postable_id','id')->where('postable_type', Novel::class);
     }
 }
