@@ -3,7 +3,10 @@
 namespace App\Repositories;
 
 use App\Jobs\DeleteImage;
+use App\Models\Chapter;
+use App\Models\Log;
 use App\Models\Novel;
+use App\Models\Post;
 use Illuminate\Support\Facades\Auth;
 
 class NovelRepository
@@ -69,6 +72,58 @@ class NovelRepository
         }else{
             return $novel->delete();
         }
+    }
+
+    public function getNovelLogs($id,$request)
+    {
+
+        $model = $request->input('tab', 'novel');
+        $action = $request->input('action','all');
+        $q = $request->input('q', '');
+
+        $novel = $this->novel->withTrashed()->find($id);
+        
+        $logs = Log::query();
+        
+        if($model == 'novel'){
+            $novelID = $novel->id;
+            $logs->where(function ($query) use ($novelID) {
+                $query->where('logable_type', Novel::class)
+                    ->where('logable_id', $novelID);
+            });
+        } else if($model == 'chapters') {
+            $chapterID = $novel->chapters()->pluck('id');
+            $logs->where(function ($query) use ($chapterID) {
+                $query->where('logable_type', Chapter::class)
+                    ->whereIn('logable_id', $chapterID);
+            });
+        } else {
+            $postID = $novel->posts()->pluck('id');
+            $logs->where(function ($query) use ($postID) {
+                $query->where('logable_type', Post::class)
+                    ->whereIn('logable_id', $postID);
+            });
+        }
+
+        if($action !== 'all'){
+            $logs->where('action', $action);
+        }
+
+        if($q){
+            $logs->where(function ($query) use ($q) {
+                $query->where('title', 'like', '%' . $q . '%')
+                    ->orWhere('description', 'like', '%' . $q . '%')
+                    ->orWhere('ip_address', 'like', '%' . $q . '%')
+                    ->orWhere('user_agent', 'like', '%' . $q . '%');
+            });
+        }
+
+        
+        
+        $logs = $logs->with('user')->paginate(10);
+
+        return $logs;
+        
     }
 
     public function createNovelPost($id,$data)

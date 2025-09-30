@@ -216,6 +216,29 @@ class NovelController extends Controller
         ]);
     }
 
+    public function getNovelLogs($id,Request $request)
+    {
+
+
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        $this->authorize('view', $novel);
+
+        $logs = $this->novelRepository->getNovelLogs($id,$request);
+
+        return response()->json([
+            'data' => $logs,
+        ]);
+
+    }
+
+    
     public function getNovelChapters($id)
     {
 

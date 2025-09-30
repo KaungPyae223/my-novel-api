@@ -37,11 +37,13 @@ class HomeController extends Controller
         // Recommend unread novels
         $novels = Novel::query()
         ->leftJoin('views', 'novels.id', '=', 'views.viewable_id')
-        ->select('novels.*', DB::raw('COUNT(views.id) as views_count'))
+        ->leftJoin('chapters', 'novels.id', '=', 'chapters.novel_id')
+        ->select('novels.*', DB::raw('COUNT(views.id) as views_count'),DB::raw('COUNT(DISTINCT chapters.id) as chapters_count'))
         ->where(
-            'status', 'published'
+            'novels.status', 'published'
         )
-        ->groupBy('novels.id')
+        ->groupBy('novels.id') 
+        ->havingRaw('COUNT(DISTINCT chapters.id) > 0')
         ->orderByRaw("
             (CASE WHEN novels.genre_id IN (".implode(',', $favoriteGenres).") THEN 2 ELSE 0 END) +
             (CASE WHEN novels.user_id IN (".implode(',', $favoriteAuthors).") THEN 1 ELSE 0 END) +

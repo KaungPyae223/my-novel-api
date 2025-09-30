@@ -38,6 +38,11 @@ class Chapter extends Model
         return $this->morphMany(Love::class, 'loveable');
     }
 
+    public function logs()
+    {
+        return $this->morphMany(Log::class, 'logable');
+    }
+
     public function history()
     {
         return $this->morphMany(History::class, 'historyable');
