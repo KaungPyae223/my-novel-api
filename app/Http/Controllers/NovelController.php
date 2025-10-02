@@ -156,9 +156,6 @@ class NovelController extends Controller
             ], 404);
         }
 
-
-
-
         if ($novel->status != 'published' && !Auth::guard('sanctum')->check() && $novel->user_id != $user_id) {
             return response()->json([
                 'message' => 'Novel not found',
@@ -258,6 +255,25 @@ class NovelController extends Controller
         ]);
     }
 
+    public function getTrashedChapters($id)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        $this->authorize('view', $novel);
+
+        $chapters = $this->novelRepository->getTrashedChapters($novel->id);
+
+        return response()->json([
+            'data' => NovelChapterResource::collection($chapters),
+        ]);
+    }
+
     public function showUserNovelChapter($id)
     {
         $novel = $this->novelRepository->findNovel($id);
@@ -299,13 +315,10 @@ class NovelController extends Controller
 
         $user = Auth::user();
 
-
         $totalNovels = $user->novels->count();
         $totalViews = $user->novels->flatMap->view->count();
         $totalLoves = $user->novels->flatMap->love->count();
         $totalShares = $user->novels->sum('share_count');
-
-
 
         return response()->json([
             'totalNovels' => $totalNovels,
@@ -313,7 +326,6 @@ class NovelController extends Controller
             'totalLoves' => ShortNumber::number_shorten($totalLoves),
             'totalShares' => ShortNumber::number_shorten($totalShares),
         ]);
-
 
     }
 
@@ -323,7 +335,7 @@ class NovelController extends Controller
     public function destroy($id)
     {
 
-        $novel = $this->novelRepository->findNovel($id);
+        $novel = $this->novelRepository->findNovelWithTrash($id);
 
         if (!$novel) {
             return response()->json([

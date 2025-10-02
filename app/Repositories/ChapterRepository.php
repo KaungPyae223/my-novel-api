@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Http\Utils\WriteLog;
 use App\Models\Chapter;
 use Illuminate\Support\Facades\Auth;
 
@@ -73,6 +74,7 @@ class ChapterRepository
         if ($chapter->trashed()) {
             return $chapter->forceDelete();
         }else{
+            WriteLog::write($chapter, 'trashed', $chapter->getAttributes());
             return $chapter->delete();
         }
     }

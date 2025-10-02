@@ -42,6 +42,9 @@ class HomeController extends Controller
         ->where(
             'novels.status', 'published'
         )
+        ->where(
+            'chapters.deleted_at', null
+        )
         ->groupBy('novels.id') 
         ->havingRaw('COUNT(DISTINCT chapters.id) > 0')
         ->orderByRaw("

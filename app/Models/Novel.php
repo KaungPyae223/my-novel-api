@@ -29,6 +29,12 @@ class Novel extends Model
         'unique_name',
     ];
 
+    public function softDelete()
+    {
+        $this->delete();
+    }
+
+    
     public function genre()
     {
         return $this->belongsTo(Genre::class, 'genre_id', 'id');

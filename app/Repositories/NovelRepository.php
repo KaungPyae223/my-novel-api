@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Http\Utils\WriteLog;
 use App\Jobs\DeleteImage;
 use App\Models\Chapter;
 use App\Models\Log;
@@ -21,6 +22,11 @@ class NovelRepository
     public function findNovel($id)
     {
         return $this->novel->find($id);
+    }
+
+    public function findNovelWithTrash($id)
+    {
+        return $this->novel->withTrashed()->find($id);
     }
 
     public function getMyNovels($user_id,$q)
@@ -62,7 +68,7 @@ class NovelRepository
 
     public function delete($id)
     {
-        $novel = $this->novel->withTrashed()->find($id);
+        $novel = $this->findNovelWithTrash($id);
 
         if ($novel->trashed()) {
             if ($novel->image_public_id) {
@@ -70,6 +76,8 @@ class NovelRepository
             }
             return $novel->forceDelete();
         }else{
+           
+            WriteLog::write($novel, 'trashed', $novel->getAttributes());
             return $novel->delete();
         }
     }
@@ -81,29 +89,20 @@ class NovelRepository
         $action = $request->input('action','all');
         $q = $request->input('q', '');
 
-        $novel = $this->novel->withTrashed()->find($id);
+        $novel = $this->findNovelWithTrash($id);
         $novelID = $novel->id;
            
-        $logs = Log::query();
+        $logs = Log::query()->where(function ($query) use ($novelID) {
+            $query->where('parentable_id', $novelID)
+                ->where('parentable_type', Novel::class);
+        });
         
         if($model == 'novel'){
-            $logs->where(function ($query) use ($novelID) {
-                $query->where('logable_type', Novel::class)
-                    ->where('parentable_id', $novelID)
-                    ->where('parentable_type', Novel::class);
-            });
+            $logs->where('logable_type', Novel::class);
         } else if($model == 'chapters') {
-            $logs->where(function ($query) use ($novelID) {
-                $query->where('logable_type', Chapter::class)
-                    ->where('parentable_id', $novelID)
-                    ->where('parentable_type', Novel::class);
-            });
+            $logs->where('logable_type', Chapter::class);
         } else {
-            $logs->where(function ($query) use ($novelID) {
-                $query->where('logable_type', Post::class)
-                    ->where('parentable_id', $novelID)
-                    ->where('parentable_type', Novel::class);
-            });
+            $logs->where('logable_type', Post::class);
         }
 
         if($action !== 'all'){
@@ -118,10 +117,8 @@ class NovelRepository
                     ->orWhere('user_agent', 'like', '%' . $q . '%');
             });
         }
-
         
-        
-        $logs = $logs->with('user')->paginate(10);
+        $logs = $logs->with('user')->orderBy('created_at', 'desc')->paginate(10);
 
         return $logs;
         
@@ -136,13 +133,13 @@ class NovelRepository
 
     public function getNovelPost($id)
     {
-        $novel = $this->findNovel($id);
+        $novel = $this->findNovelWithTrash($id);
         return $novel->posts()->orderBy('created_at', 'desc')->get();
     }
 
     public function addView($id,$user_id)
     {
-        $novel = $this->findNovel($id);
+        $novel = $this->findNovelWithTrash($id);
 
         $last_view = $novel->view()->where('user_id', $user_id)->latest()->first() ;
 
@@ -203,6 +200,12 @@ class NovelRepository
         $novel = $this->findNovel($id);
         $novel->share_count++;
         $novel->save();
+    }
+
+    public function getTrashedChapters($id)
+    {
+        $novel = $this->findNovelWithTrash($id);
+        return $novel->chapters()->onlyTrashed()->get();
     }
 
 }

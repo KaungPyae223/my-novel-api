@@ -397,7 +397,7 @@ class ChapterController extends Controller
 
     public function show($id,Request $request)
     {
-        $chapter = $this->ChapterRepository->findChapter($id);
+        $chapter = $this->ChapterRepository->findChapterWithTrash($id);
         $language = $request->input('language');
         $readType = $request->input('read_type');
 
@@ -409,7 +409,7 @@ class ChapterController extends Controller
 
         $user_id = null;
 
-        if (Auth::guard('sanctum')->check()) {
+        if (Auth::guard('sanctum')->check() && $chapter->status == 'published' && !$chapter->trashed()) {
             $user_id = Auth::guard('sanctum')->user()->id;
             $this->ChapterRepository->addView($id,$user_id);
             $this->ChapterRepository->addHistory($id,$user_id);
@@ -421,8 +421,6 @@ class ChapterController extends Controller
             ], 404);
         }
 
-
-
         $already_loved = false;
 
         if($user_id){
@@ -430,9 +428,9 @@ class ChapterController extends Controller
         }
 
         if($language){
-            if($readType == 'summary'){
+            if($readType == 'summary' && !empty($chapter->summary)){
                 $chapter->summary = $this->translate($chapter->summary,$chapter->novel->genre->genre,$language);
-            }else{
+            }else if(!empty($chapter->content)){
                 $chapter->content = $this->translate($chapter->content,$chapter->novel->genre->genre,$language);
             }
         }
@@ -529,6 +527,9 @@ class ChapterController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+
+    
+
     public function destroy($id)
     {
         $chapter = $this->ChapterRepository->findChapterWithTrash($id);

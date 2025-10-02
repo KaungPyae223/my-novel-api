@@ -20,6 +20,8 @@ class Post extends Model
         'user_id',
     ];
 
+    
+
     public function postable()
     {
         return $this->morphTo();

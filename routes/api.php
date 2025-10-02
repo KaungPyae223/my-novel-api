@@ -50,6 +50,7 @@ Route::prefix("v1")->group(function () {
                 Route::post('novels/create-post/{id}', 'createNovelPost');
                 Route::get('my-novels/kpi', 'getMyNovelsKPI');
                 Route::get('novel-logs/{id}', 'getNovelLogs');
+                Route::get('novel-trashed-chapters/{id}', 'getTrashedChapters');
             });
         });
         Route::controller(NovelController::class)->group(function () {
