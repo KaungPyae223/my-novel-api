@@ -34,7 +34,7 @@ class Novel extends Model
         $this->delete();
     }
 
-    
+   
     public function genre()
     {
         return $this->belongsTo(Genre::class, 'genre_id', 'id');

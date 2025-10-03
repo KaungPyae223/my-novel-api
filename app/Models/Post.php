@@ -10,7 +10,6 @@ class Post extends Model
 {
     /** @use HasFactory<\Database\Factories\PostFactory> */
     use HasFactory;
-
     use CreateLog;
 
     protected $fillable = [
@@ -44,6 +43,6 @@ class Post extends Model
 
     public function novel()
     {
-        return $this->belongsTo(Novel::class,'postable_id','id')->where('postable_type', Novel::class);
+        return $this->belongsTo(Novel::class,'postable_id','id');
     }
 }

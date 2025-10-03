@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->morphs('logable');
             $table->morphs('parentable');
-            $table->string('title');
+            $table->string('title')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->string('action');
             $table->string('ip_address')->nullable();

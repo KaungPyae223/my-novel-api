@@ -17,7 +17,13 @@ class ChapterFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'title' => $this->faker->sentence(4),
+            'status' => "published", 
+            'novel_id' => $this->faker->numberBetween(1, 50),
+            'content' => $this->faker->paragraphs(10, true), 
+            'summary' => $this->faker->paragraph(3),
+            'share_count' => $this->faker->numberBetween(0, 500),
+            'scheduled_date' => null,
         ];
     }
 }
