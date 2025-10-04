@@ -21,26 +21,23 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        // Get user's novel views with related novels
-        $userViews = $user->views()
-            ->where('viewable_type', Novel::class)
-            ->with('novel')
-            ->get();
+        $history = $user->viewedNovels()
+            ->pluck('novels.id')
+            ->unique()
+            ->toArray();
 
-        $history = $userViews->pluck('viewable_id')->toArray();
-        $favoriteGenres = $userViews->pluck('novel')
-            ->filter()
-            ->pluck('genre_id')
+        $favoriteGenres = $user->viewedNovels()
+            ->pluck('novels.genre_id')
             ->unique()
             ->toArray();
-        $favoriteAuthors = $userViews->pluck('novel')
-            ->filter()
-            ->pluck('user_id')
+
+        $favoriteAuthors = $user->viewedNovels()
+            ->pluck('novels.user_id')
             ->unique()
             ->toArray();
+
         $favoriteNovels = $user->favorites->pluck('novel_id')->toArray();
 
-        // Ensure arrays are never empty to prevent SQL errors
         $history = $history ?: [0];
         $favoriteGenres = $favoriteGenres ?: [0];
         $favoriteAuthors = $favoriteAuthors ?: [0];
@@ -48,23 +45,23 @@ class HomeController extends Controller
 
         // Recommend unread novels
         $novels = Novel::query()
-            ->leftJoin('views', 'novels.id', '=', 'views.viewable_id')
-            ->select('novels.*', DB::raw('COUNT(views.id) as views_count'))
-            ->where('novels.status', 'published')
-            ->whereNull('novels.deleted_at')
+            ->withCount('view')
+            ->where('status', 'published')
+            ->whereNull('deleted_at')
             ->whereHas('chapters', function ($query) {
                 $query->where('status', 'published')
                     ->whereNull('deleted_at');
             })
             ->groupBy('novels.id')
             ->orderByRaw("
-                (CASE WHEN novels.genre_id IN (" . implode(',', $favoriteGenres) . ") THEN 2 ELSE 0 END) +
-                (CASE WHEN novels.user_id IN (" . implode(',', $favoriteAuthors) . ") THEN 2 ELSE 0 END) +
-                (CASE WHEN novels.id IN (" . implode(',', $history) . ") THEN -1 ELSE 0 END) +
-                (CASE WHEN novels.id IN (" . implode(',', $favoriteNovels) . ") THEN -2 ELSE 0 END) DESC
+                (CASE WHEN genre_id IN (" . implode(',', $favoriteGenres) . ") THEN 2 ELSE 0 END) +
+                (CASE WHEN user_id IN (" . implode(',', $favoriteAuthors) . ") THEN 2 ELSE 0 END) +
+                (CASE WHEN id IN (" . implode(',', $history) . ") THEN -1 ELSE 0 END) +
+                (CASE WHEN id IN (" . implode(',', $favoriteNovels) . ") THEN -2 ELSE 0 END) DESC
             ")
-            ->orderByDesc('views_count')
+            ->orderByDesc("view_count")
             ->paginate(10);
+
 
         return HomeNovelResource::collection($novels);
     }
@@ -76,9 +73,8 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        $history = $user->views()
-            ->where('viewable_type', Chapter::class)
-            ->pluck('viewable_id')
+        $history = $user->viewedChapters()
+            ->pluck('chapters.id')
             ->unique()
             ->toArray();
 
@@ -113,9 +109,9 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        $history = $user->views
-            ->where('viewable_type', Novel::class)
-            ->pluck('viewable_id')
+        $history = $user->viewedNovels()
+            ->pluck('novels.id')
+            ->unique()
             ->toArray();
 
         $favoriteNovels = $user->favorites->pluck('novel_id')->toArray();
@@ -128,7 +124,7 @@ class HomeController extends Controller
                 $query->where('status', 'published')
                     ->whereNull('deleted_at');
             })
-            ->where('pastable_type', Novel::class)
+            ->where('postable_type', Novel::class)
             ->orderByRaw("
                 ((CASE WHEN postable_id IN (" . implode(',', $favoriteNovels) . ") THEN 2 ELSE 0 END) +
                  (CASE WHEN postable_id IN (" . implode(',', $history) . ") THEN 1 ELSE 0 END)) -

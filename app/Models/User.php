@@ -75,6 +75,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(View::class, 'user_id', 'id');
     }
 
+    public function viewedNovels()
+    {
+        return $this->morphedByMany(Novel::class, 'viewable', 'views');
+    }
+
+    public function viewedChapters()
+    {
+        return $this->morphedByMany(Chapter::class, 'viewable', 'views');
+    }
+
     public function favorites()
     {
         return $this->hasMany(Favorite::class, 'user_id', 'id');
