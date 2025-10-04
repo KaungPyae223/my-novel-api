@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\NovelController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\UserController;
@@ -21,6 +22,11 @@ Route::prefix("v1")->group(function () {
 
 
     Route::middleware('auth:sanctum')->group(function () {
+
+
+        Route::controller(LibraryController::class)->group(function () {
+            Route::get('library/novels', 'Novels');
+        });
 
         Route::controller(AuthenticationController::class)->group(function () {
             Route::post('/send-verification-mail', 'SendVerificationEmail');
@@ -80,10 +86,10 @@ Route::prefix("v1")->group(function () {
             Route::post('posts/loved/{id}', 'postLove');
         });
 
-        Route::controller(HomeController::class)->group(function () {
-            Route::get('recommend-novels', 'recommendNovels');
-            Route::get('recommend-chapters', 'recommendChapters');
-            Route::get('recommend-posts', 'recommendPosts');
+        Route::controller(HomeController::class)->prefix('home')->group(function () {
+            Route::get('novels', 'recommendNovels');
+            Route::get('chapters', 'recommendChapters');
+            Route::get('posts', 'recommendPosts');
         });
 
     });

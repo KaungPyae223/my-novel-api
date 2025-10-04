@@ -13,4 +13,14 @@ class View extends Model
     protected $fillable = [
         'user_id',
     ];
+
+    public function viewable()
+    {
+        return $this->morphTo();
+    }
+
+    public function novel()
+    {
+        return $this->belongsTo(Novel::class);
+    }
 }

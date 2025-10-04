@@ -14,114 +14,129 @@ use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
+    /**
+     * Get recommended novels for the user
+     */
     public function recommendNovels()
     {
         $user = Auth::user();
-        // Get novels user already read
-        $history = $user->histories->pluck('novel_id')->toArray() ;
 
-        $favoriteGenres = $user->histories->pluck('novel.genre_id')->toArray();
+        // Get user's novel views with related novels
+        $userViews = $user->views()
+            ->where('viewable_type', Novel::class)
+            ->with('novel')
+            ->get();
 
-        // need add change with follow
-        $favoriteAuthors = $user->histories->pluck('novel.user_id')->toArray();
-
+        $history = $userViews->pluck('viewable_id')->toArray();
+        $favoriteGenres = $userViews->pluck('novel')
+            ->filter()
+            ->pluck('genre_id')
+            ->unique()
+            ->toArray();
+        $favoriteAuthors = $userViews->pluck('novel')
+            ->filter()
+            ->pluck('user_id')
+            ->unique()
+            ->toArray();
         $favoriteNovels = $user->favorites->pluck('novel_id')->toArray();
 
-
-        // Get favorite genres & authors from history
-        $history = !empty($history) ? $history : [0];
-        $favoriteGenres = !empty($favoriteGenres) ? $favoriteGenres : [0];
-        $favoriteAuthors = !empty($favoriteAuthors) ? $favoriteAuthors : [0];
-        $favoriteNovels = !empty($favoriteNovels) ? $favoriteNovels : [0];
+        // Ensure arrays are never empty to prevent SQL errors
+        $history = $history ?: [0];
+        $favoriteGenres = $favoriteGenres ?: [0];
+        $favoriteAuthors = $favoriteAuthors ?: [0];
+        $favoriteNovels = $favoriteNovels ?: [0];
 
         // Recommend unread novels
         $novels = Novel::query()
-        ->leftJoin('views', 'novels.id', '=', 'views.viewable_id')
-        ->leftJoin('chapters', 'novels.id', '=', 'chapters.novel_id')
-        ->select('novels.*', DB::raw('COUNT(views.id) as views_count'),DB::raw('COUNT(DISTINCT chapters.id) as chapters_count'))
-        ->where(
-            'novels.status', 'published'
-        )
-        ->where(
-            'chapters.deleted_at', null
-        )
-        ->groupBy('novels.id') 
-        ->havingRaw('COUNT(DISTINCT chapters.id) > 0')
-        ->orderByRaw("
-            (CASE WHEN novels.genre_id IN (".implode(',', $favoriteGenres).") THEN 2 ELSE 0 END) +
-            (CASE WHEN novels.user_id IN (".implode(',', $favoriteAuthors).") THEN 1 ELSE 0 END) +
-            (CASE WHEN novels.id IN (".implode(',', $history).") THEN -1 ELSE 0 END) +
-            (CASE WHEN novels.id IN (".implode(',', $favoriteNovels).") THEN -2 ELSE 0 END) DESC
+            ->leftJoin('views', 'novels.id', '=', 'views.viewable_id')
+            ->select('novels.*', DB::raw('COUNT(views.id) as views_count'))
+            ->where('novels.status', 'published')
+            ->whereNull('novels.deleted_at')
+            ->whereHas('chapters', function ($query) {
+                $query->where('status', 'published')
+                    ->whereNull('deleted_at');
+            })
+            ->groupBy('novels.id')
+            ->orderByRaw("
+                (CASE WHEN novels.genre_id IN (" . implode(',', $favoriteGenres) . ") THEN 2 ELSE 0 END) +
+                (CASE WHEN novels.user_id IN (" . implode(',', $favoriteAuthors) . ") THEN 2 ELSE 0 END) +
+                (CASE WHEN novels.id IN (" . implode(',', $history) . ") THEN -1 ELSE 0 END) +
+                (CASE WHEN novels.id IN (" . implode(',', $favoriteNovels) . ") THEN -2 ELSE 0 END) DESC
             ")
-        ->orderBy('views_count', 'desc')
-        ->limit(10)
-        ->get();
-
+            ->orderByDesc('views_count')
+            ->paginate(10);
 
         return HomeNovelResource::collection($novels);
     }
 
+    /**
+     * Get recommended chapters for the user
+     */
     public function recommendChapters()
     {
         $user = Auth::user();
-        // Get novels user already read
-        $history = $user->histories->pluck('novel_id')->toArray();
+
+        $history = $user->views()
+            ->where('viewable_type', Chapter::class)
+            ->pluck('viewable_id')
+            ->unique()
+            ->toArray();
 
         $favoriteNovels = $user->favorites->pluck('novel_id')->toArray();
 
-        $history = !empty($history) ? $history : [0];
-        $favoriteNovels = !empty($favoriteNovels) ? $favoriteNovels : [0];
+        $history = $history ?: [0];
+        $favoriteNovels = $favoriteNovels ?: [0];
 
-        // Recommend unread novels
         $chapters = Chapter::query()
-        ->leftJoin('views', 'chapters.id', '=', 'views.viewable_id')
-        ->leftJoin('novels', 'chapters.novel_id', '=', 'novels.id')
-        ->select('chapters.*', 'views.viewable_id')
-        ->where(
-            'chapters.status', 'published'
-        )->where(
-            'novels.status', 'published'
-        )
-        ->groupBy('chapters.id')
-        ->orderByRaw("
-            (CASE WHEN chapters.novel_id IN (".implode(',', $favoriteNovels).") THEN 1 ELSE 0 END) +
-            (CASE WHEN chapters.novel_id IN (".implode(',', $history).") THEN 1 ELSE 0 END) +
-            (CASE WHEN views.viewable_id NOT IN (".implode(',', $history).") THEN 1 ELSE 0 END) +
-            (CASE WHEN views.viewable_id NOT IN (".implode(',', $favoriteNovels).") THEN 2 ELSE 0 END) -
-            (DateDiff(now(), chapters.created_at) / 10) DESC
-
-        ")
-        ->limit(10)
-        ->get();
-
+            ->whereHas('novel', function ($query) {
+                $query->where('status', 'published')
+                    ->whereNull('deleted_at');
+            })
+            ->where('status', 'published')
+            ->whereNull('deleted_at')
+            ->orderByRaw("
+                (CASE WHEN novel_id IN (" . implode(',', $favoriteNovels) . ") THEN 1 ELSE 0 END) +
+                (CASE WHEN novel_id IN (" . implode(',', $history) . ") THEN 1 ELSE 0 END) +
+                (CASE WHEN id NOT IN (" . implode(',', $history) . ") THEN 2 ELSE 0 END) +
+                (DATEDIFF(NOW(), created_at) / 10) DESC
+            ")
+            ->limit(10)
+            ->get();
 
         return HomeChapterResource::collection($chapters);
     }
 
+    /**
+     * Get recommended posts for the user
+     */
     public function recommendPosts()
     {
         $user = Auth::user();
-        // Get novels user already read
-        $history = $user->histories->pluck('novel_id')->toArray();
+
+        $history = $user->views
+            ->where('viewable_type', Novel::class)
+            ->pluck('viewable_id')
+            ->toArray();
 
         $favoriteNovels = $user->favorites->pluck('novel_id')->toArray();
 
-        $history = !empty($history) ? $history : [0];
-        $favoriteNovels = !empty($favoriteNovels) ? $favoriteNovels : [0];
+        $history = $history ?: [0];
+        $favoriteNovels = $favoriteNovels ?: [0];
 
         $posts = Post::query()
-        ->select('posts.*')
-        ->leftJoin('novels', 'posts.postable_id', '=', 'novels.id')
-        ->where(
-            'novels.status', 'published'
-        )
-        ->orderByRaw("((CASE WHEN posts.postable_id IN (".implode(',', $favoriteNovels).") THEN 2 ELSE 0 END) +
-            (CASE WHEN posts.postable_id IN (".implode(',', $history).") THEN 1 ELSE 0 END) ) -
-            (DateDiff(now(), posts.created_at) / 10) DESC")
-        ->limit(10)
-        ->get();
+            ->whereHas('novel', function ($query) {
+                $query->where('status', 'published')
+                    ->whereNull('deleted_at');
+            })
+            ->where('pastable_type', Novel::class)
+            ->orderByRaw("
+                ((CASE WHEN postable_id IN (" . implode(',', $favoriteNovels) . ") THEN 2 ELSE 0 END) +
+                 (CASE WHEN postable_id IN (" . implode(',', $history) . ") THEN 1 ELSE 0 END)) -
+                (DATEDIFF(NOW(), created_at) / 10) DESC
+            ")
+            ->limit(10)
+            ->get();
 
         return HomePostResource::collection($posts);
     }
 }
-

@@ -26,7 +26,7 @@ class HomeNovelResource extends JsonResource
             'share_count' => ShortNumber::number_shorten($this->share_count),
             'love_count' => ShortNumber::number_shorten($this->love->count()),
             'views_count' => ShortNumber::number_shorten($this->view->count()),
-            'total_chapters' => $this->chapters()->where('status', 'published')->count(),
+            'total_chapters' => $this->chapters()->where('status', 'published')->where('deleted_at', null)->count(),
             'description' => $this->description,
             'synopsis' => $this->synopsis,
             'tags' => $this->tags,
