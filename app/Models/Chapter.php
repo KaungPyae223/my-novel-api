@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Traits\CreateLog;
+use App\Traits\NovelChapterElasticSync;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class Chapter extends Model
 {
@@ -13,6 +15,7 @@ class Chapter extends Model
     use HasFactory,SoftDeletes;
 
     use CreateLog;
+    use NovelChapterElasticSync;
 
     protected $fillable = [
         'title',

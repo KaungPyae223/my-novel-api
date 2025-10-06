@@ -100,7 +100,7 @@ class LibraryRepository
             ],
         ]);
 
-        
+       
         return $this->formatNovelData($searchNovels,$limit,$page);
     }
 
@@ -110,7 +110,7 @@ class LibraryRepository
 
         $formattedNovels = collect($hits)->map(function ($hit) {
             return [
-                'id' => $hit->_id,
+                'id' => $hit->_source->id,
                 'title' => $hit->_source->title,
                 'description' => $hit->_source->description,
                 'synopsis' => $hit->_source->synopsis,
@@ -123,6 +123,7 @@ class LibraryRepository
                 'chapters_count' => $hit->_source->chapters_count,
                 'views_count' => $hit->_source->views_count,
                 'loved_count' => $hit->_source->loved_count,
+                'created_at' => $hit->_source->created_at,
             ];
         });
 

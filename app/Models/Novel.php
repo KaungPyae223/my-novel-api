@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\CreateLog;
+use App\Traits\NovelElasticSync;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,8 +12,8 @@ class Novel extends Model
 {
     /** @use HasFactory<\Database\Factories\NovelFactory> */
     use HasFactory,SoftDeletes;
-
     use CreateLog;
+    use NovelElasticSync;
 
     protected $fillable = [
         'title',
