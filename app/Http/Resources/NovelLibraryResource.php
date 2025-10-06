@@ -22,7 +22,7 @@ class NovelLibraryResource extends JsonResource
             'genre' => $this->genre->genre,
             'synopsis' => $this->synopsis,
             'image' => $this->image,
-            'chapters_count' => $this->chapters()->where('status', 'published')->where('deleted_at', null)->count(),
+            'chapters_count' => $this->chapters()->where('status', 'published')->whereNull('deleted_at')->count(),
             'views_count' => $this->view->count(),
             'loved_count' => $this->love->count(),
             'tags' => $this->tags,
