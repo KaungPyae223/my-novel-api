@@ -54,8 +54,6 @@ class LibraryRepository
 
     public function searchNovelFromElastic($q, $genre, $progress, $limit, $page)
     {
-
-
         $must = [];
         $filter = [];
         $sort = [];
@@ -65,9 +63,10 @@ class LibraryRepository
                 'multi_match' => [
                     'query' => $q,
                     'fields' => ['title^3', 'unique_name^3', 'description^1', 'synopsis^1', 'tags^1', 'author.full_name^2'],
-                    'fuzziness' => 'AUTO',
+                    'type' => 'phrase_prefix',
                 ],
             ];
+            
         } else {
             $sort = [
                 'created_at' => ['order' => 'desc'],
@@ -132,8 +131,7 @@ class LibraryRepository
             'data' => $formattedNovels,
             'meta' => [
                 'last_page' => round($searchNovels->hits->total->value / $limit),
-                'current_page' => $page,
-
+                'current_page' => (int)$page,
             ],
         ]);
 

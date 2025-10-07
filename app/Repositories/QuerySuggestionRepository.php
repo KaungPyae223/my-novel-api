@@ -51,8 +51,8 @@ class QuerySuggestionRepository
                 'query' => [
                     'multi_match' => [
                         'query'     => $q,
-                        'fields'    => ['title^2', 'description', 'synopsis', 'tags^2', 'genre^2', 'author^2'],
-                        'fuzziness' => 'AUTO',
+                        'fields'    => ['title^2', 'description'],
+                        'type' => 'phrase_prefix',
                     ],
                 ],
                 'highlight' => [
