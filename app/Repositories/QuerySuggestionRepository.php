@@ -50,9 +50,10 @@ class QuerySuggestionRepository
                 '_source' => ['title','id', 'description','image'],
                 'query' => [
                     'multi_match' => [
-                        'query'     => $q,
-                        'fields'    => ['title^2', 'description'],
-                        'type' => 'phrase_prefix',
+                        'query' => $q,
+                        'fields' => ['title^2', 'description'],
+                        'type' => 'best_fields',
+                        'operator' => 'and'
                     ],
                 ],
                 'highlight' => [
