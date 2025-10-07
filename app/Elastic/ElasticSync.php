@@ -45,6 +45,7 @@ class ElasticSync
                     'id'    => $novel->id,
                     'body'  => [
                         'id'             => $novel->id,
+                        'unique_name'    => $novel->unique_name,
                         'title'          => $novel->title,
                         'description'    => $novel->description,
                         'synopsis'       => $novel->synopsis,

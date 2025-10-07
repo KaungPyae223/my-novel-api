@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\Elastic\ElasticSync;
 use App\Http\Resources\NovelLibraryResource;
 use App\Http\Utils\ElasticSetUp;
 use App\Models\Novel;
@@ -33,6 +32,7 @@ class LibraryRepository
                     ->orWhere('novels.description', 'like', "%{$q}%")
                     ->orWhere('novels.synopsis', 'like', "%{$q}%")
                     ->orWhere('novels.tags', 'like', "%{$q}%")
+                    ->orWhere('novels.unique_name', 'like', "%{$q}%")
                     ->orWhereHas('user', function ($query) use ($q) {
                         $query->where('users.full_name', 'like', "%{$q}%");
                     });
@@ -55,6 +55,7 @@ class LibraryRepository
     public function searchNovelFromElastic($q, $genre, $progress, $limit, $page)
     {
 
+
         $must = [];
         $filter = [];
         $sort = [];
@@ -63,7 +64,7 @@ class LibraryRepository
             $must[] = [
                 'multi_match' => [
                     'query' => $q,
-                    'fields' => ['title^3', 'description^1', 'synopsis^1', 'tags^2', 'author.full_name^2'],
+                    'fields' => ['title^3', 'unique_name^3', 'description^1', 'synopsis^1', 'tags^1', 'author.full_name^2'],
                     'fuzziness' => 'AUTO',
                 ],
             ];

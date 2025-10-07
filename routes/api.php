@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\NovelController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\QuerySuggestionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -90,6 +91,10 @@ Route::prefix("v1")->group(function () {
             Route::get('novels', 'recommendNovels');
             Route::get('chapters', 'recommendChapters');
             Route::get('posts', 'recommendPosts');
+        });
+
+        Route::controller(QuerySuggestionController::class)->prefix('suggestions')->group(function () {
+            Route::get('novels', 'novelSuggestion');
         });
 
     });
