@@ -57,23 +57,29 @@ class LibraryRepository
         $must = [];
         $filter = [];
         $sort = [];
+        
 
         if ($q) {
+
+            $type = 'best_fields';
+            $operator = 'and';
+
+            if(count(array_filter(explode(" ", $q))) == 1){
+                $type = 'phrase_prefix';  
+                $operator = 'or';
+            }
+
             $must[] = [
                 'multi_match' => [
                     'query' => $q,
                     'fields' => ['title^3', 'unique_name^3', 'description^1', 'synopsis^1', 'tags^1', 'author.full_name^2'],
-                    'type' => 'best_fields',
-                    
+                    'type' => $type,
+                    'fuzziness' => 'AUTO',
+                    'operator' => $operator
                 ],
             ];
 
-            if(strlen($q) <= 3){
-                $must[0]["multi_match"]["type"] = 'phrase_prefix';    
-            }else{
-                $must[0]["multi_match"]["type"] = 'best_fields';    
-                $must[0]["multi_match"]["operator"] = 'and';
-            }
+            
             
         } else {
             $sort = [
