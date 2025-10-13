@@ -21,6 +21,10 @@ class NovelElastic
             self::deleteNovelElastic($id);
             return;
         }
+        if ($novel->status != 'published' || $novel->trashed()) {
+            self::deleteNovelElastic($id);
+            return;
+        }
 
         try {
             $elastic->index([

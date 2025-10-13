@@ -24,7 +24,7 @@ class NovelFactory extends Factory
             'unique_name' => Str::slug($title) . '-' . Str::random(6), 
             'description' => $this->faker->paragraph(5),
             'synopsis' => $this->faker->paragraph(3),
-            'tags' => implode(',', $this->faker->words(5)),
+            'tags' => implode('/', $this->faker->words(5)),
             'image' => "https://images.unsplash.com/photo-1756806983687-203048d56220?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             'image_public_id' => null,
             'status' => "published",

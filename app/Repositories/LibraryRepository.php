@@ -61,21 +61,23 @@ class LibraryRepository
 
         if ($q) {
 
-            $type = 'best_fields';
-            $operator = 'and';
+            $option = [];
+
 
             if(count(array_filter(explode(" ", $q))) == 1){
-                $type = 'phrase_prefix';  
-                $operator = 'or';
+                $option['type'] = 'phrase_prefix';  
+                $option['operator'] = 'or';
+            }else{
+                $option['type'] = 'best_fields';
+                $option['operator'] = 'and';
+                $option['fuzziness'] = 'AUTO';
             }
 
             $must[] = [
                 'multi_match' => [
                     'query' => $q,
                     'fields' => ['title^3', 'unique_name^3', 'description^1', 'synopsis^1', 'tags^1', 'author.full_name^2'],
-                    'type' => $type,
-                    'fuzziness' => 'AUTO',
-                    'operator' => $operator
+                    ...$option
                 ],
             ];
 

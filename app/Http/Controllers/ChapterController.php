@@ -67,7 +67,7 @@ class ChapterController extends Controller
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])->post('https://openrouter.ai/api/v1/chat/completions', [
-                'model' => 'deepseek/deepseek-r1-0528:free',
+                'model' => config('ai.main_model'),
                 'messages' => [
                     [
                         'role' => 'system',
@@ -158,7 +158,7 @@ class ChapterController extends Controller
             'Authorization' => 'Bearer ' . $apiKey,
             'Content-Type' => 'application/json',
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model' => 'deepseek/deepseek-r1-0528:free',
+            'model' => config('ai.main_model'),
             'messages' => [
                 [
                     'role' => 'system',
@@ -250,7 +250,7 @@ class ChapterController extends Controller
             'Authorization' => 'Bearer ' . $apiKey,
             'Content-Type' => 'application/json',
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model' => 'deepseek/deepseek-r1-0528:free',
+            'model' => config('ai.main_model'),
             'messages' => [
                 [
                     'role' => 'system',

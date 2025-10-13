@@ -9,13 +9,14 @@ class QuerySuggestionRepository
 {
 
     protected $elastic;
-    
+
     public function __construct()
     {
         $this->elastic = (new ElasticSetUp())->setUp();
     }
 
-    public function suggestNovelFromDB($q){
+    public function suggestNovelFromDB($q)
+    {
 
         $suggestion = Novel::query()
             ->where('novels.status', 'published')
@@ -29,7 +30,7 @@ class QuerySuggestionRepository
             ->take(6)
             ->get();
 
-        $formattedNovels = $suggestion->map(function($data){
+        $formattedNovels = $suggestion->map(function ($data) {
             return [
                 'id' => $data->id,
                 'title' => $data->title,
@@ -39,21 +40,33 @@ class QuerySuggestionRepository
         });
 
         return response()->json($formattedNovels);
-
     }
 
-    public function suggestNovelFromElastic($q){
+    public function suggestNovelFromElastic($q)
+    {
+
+       
+
+        $option = [];
+
+        if (count(array_filter(explode(" ", $q))) == 1) {
+            $option['type'] = 'phrase_prefix';
+            $option['operator'] = 'or';
+        } else {
+            $option['type'] = 'best_fields';
+            $option['operator'] = 'and';
+            $option['fuzziness'] = 'AUTO';
+        }
 
         $suggestion = $this->elastic->search([
             'index' => 'novels',
             'body'  => [
-                '_source' => ['title','id', 'description','image'],
+                '_source' => ['title', 'id', 'description', 'image'],
                 'query' => [
                     'multi_match' => [
                         'query' => $q,
                         'fields' => ['title^2', 'description'],
-                        'type' => 'phrase_prefix',
-                        'fuzziness' => 'AUTO'
+                        ...$option
                     ],
                 ],
                 'highlight' => [
@@ -61,7 +74,7 @@ class QuerySuggestionRepository
                     'post_tags' => ['</span>'],
                     'fields' => [
                         'title' => ['number_of_fragments' => 0],
-                        'description' => ['number_of_fragments' => 1,'fragment_size' => 600],
+                        'description' => ['number_of_fragments' => 1, 'fragment_size' => 600],
                     ],
                 ],
                 'sort' => [
@@ -72,11 +85,11 @@ class QuerySuggestionRepository
         ]);
 
         return $this->formatElasticNovelSuggestionData($suggestion);
-
     }
-    
-    public function formatElasticNovelSuggestionData($suggestion){
-        
+
+    public function formatElasticNovelSuggestionData($suggestion)
+    {
+
         $hits = $suggestion->hits->hits;
 
         $formattedNovels = collect($hits)->map(function ($hit) {
@@ -89,7 +102,5 @@ class QuerySuggestionRepository
         });
 
         return response()->json($formattedNovels);
-
     }
-
 }
