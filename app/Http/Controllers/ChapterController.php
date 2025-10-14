@@ -28,7 +28,8 @@ class ChapterController extends Controller
     protected $NovelRepository;
     protected $ChapterRepository;
 
-    public function __construct(NovelRepository $NovelRepository,ChapterRepository $ChapterRepository) {
+    public function __construct(NovelRepository $NovelRepository, ChapterRepository $ChapterRepository)
+    {
         $this->NovelRepository = $NovelRepository;
         $this->ChapterRepository = $ChapterRepository;
     }
@@ -53,9 +54,7 @@ class ChapterController extends Controller
 
         $last_chapter = $novel->chapters()->orderBy('id', 'desc')->first();
 
-
         $cacheKey = 'chapter_suggestion_' . $id . '_' . ($last_chapter->id ?? 0);
-
 
         $response = Cache::remember($cacheKey, now()->addHours(12), function () use ($novel, $last_chapter) {
 
@@ -96,11 +95,16 @@ class ChapterController extends Controller
 
                             3.  **Format the Response:** Adhere strictly to the JSON structure provided above. Ensure all suggestions are within quotation marks and that multiple suggestions within a field are separated by `//`.
 
+                            Important:
+                                - Return ONLY the JSON structure — no markdown, no explanations, no commentary.
+                                - Do not include ```json or ``` wrappers.
+                                - If the response is not valid JSON, you will fail this task.
+
                             "
                     ],
                     [
                         'role' => 'user',
-                        'content' => "Here's a summary of novel: ".$novel->synopsis."\n\n Here's the content of last chapter: ".($last_chapter->content ?? null)."\n\n"
+                        'content' => "Here's a summary of novel: " . $novel->synopsis . "\n\n Here's the content of last chapter: " . ($last_chapter->content ?? null) . "\n\n"
                     ]
                 ],
             ]);
@@ -108,30 +112,12 @@ class ChapterController extends Controller
 
             $content = $response['choices'][0]['message']['content'] ?? null;
 
+            if($content){
+                $content = str_replace(['<｜begin▁of▁sentence｜>', '<｜end▁of▁sentence｜>'], '', $content);
 
-            if ($content) {
-                //Mark Down to JSON
-                preg_match('/```json\s*(.*?)\s*```/s', $content, $matches);
+                $decoded = json_decode($content, true);
 
-                if (isset($matches[1])) {
-                    $json = $matches[1];
-                    $data = json_decode($json, true);
-
-                    if (json_last_error() === JSON_ERROR_NONE) {
-                        return [
-                            'chapter_direction' => $data['chapter_direction'] ?? null,
-                            'character_development' => $data['character_development'] ?? null,
-                            'plot_enhancement' => $data['plot_enhancement'] ?? null,
-                            'writing_tips' => $data['writing_tips'] ?? null,
-                        ];
-                    } else {
-                        return ['error' => 'Failed to parse suggestion JSON.'];
-                    }
-                } else {
-                    return ['error' => 'No JSON block found in response.'];
-                }
-            } else {
-                return ['error' => 'Invalid response content.'];
+                return $decoded;
             }
 
         });
@@ -145,7 +131,8 @@ class ChapterController extends Controller
         return response()->json($response);
     }
 
-    public function assessment(Request $request){
+    public function assessment(Request $request)
+    {
         $request->validate([
             'content' => 'required|string',
         ]);
@@ -204,12 +191,17 @@ class ChapterController extends Controller
                                 \"score\": \"Your score here (0-10) please give only the score number\"
                             }
                         }
-                        Do not include any extra commentary outside the JSON.
-                    "
+                       
+                        Important:
+                            - Return ONLY the JSON structure — no markdown, no explanations, no commentary.
+                            - Do not include ```json or ``` wrappers.
+                            - If the response is not valid JSON, you will fail this task.
+
+                        "
                 ],
                 [
                     'role' => 'user',
-                    'content' => "Here's the content of chapter: ".$request->content."\n\n"
+                    'content' => "Here's the content of chapter: " . $request->content . "\n\n"
                 ]
             ],
         ]);
@@ -218,29 +210,20 @@ class ChapterController extends Controller
 
 
         if ($content) {
-            //Mark Down to JSON
-            preg_match('/```json\s*(.*?)\s*```/s', $content, $matches);
+            
+            $content = str_replace(['<｜begin▁of▁sentence｜>', '<｜end▁of▁sentence｜>'], '', $content);
 
-            if (isset($matches[1])) {
-                $json = $matches[1];
-                $data = json_decode($json, true);
+            $decoded = json_decode($content, true);
 
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    return response()->json($data);
-                } else {
-                    return response()->json(['error' => 'Failed to parse suggestion JSON.']);
-                }
-            } else {
-                return response()->json(['error' => 'No JSON block found in response.']);
-            }
-
+            return $decoded;
+            
         }
 
         return response()->json(['error' => 'Invalid response content.']);
-
     }
 
-    public function translate($content,$genre,$language){
+    public function translate($content, $genre, $language)
+    {
 
         $apiKey = config('ai.api_key');
 
@@ -266,7 +249,6 @@ class ChapterController extends Controller
         $content = $response['choices'][0]['message']['content'] ?? null;
 
         return $content;
-
     }
 
     /**
@@ -277,9 +259,9 @@ class ChapterController extends Controller
 
         $novel = $this->NovelRepository->findNovel($request->novel_id);
 
-        $this->authorize('storeChapter',$novel);
+        $this->authorize('storeChapter', $novel);
 
-        if($request->status === 'published'){
+        if ($request->status === 'published') {
             $draftCount = $this->draftCount($request->novel_id);
 
             if ($draftCount >= 1) {
@@ -287,15 +269,14 @@ class ChapterController extends Controller
                     'status' => 'draft',
                 ]);
                 $message = 'Chapter created successfully but it is in draft status because you do not have a published previous chapter';
-            }
-            else{
+            } else {
                 $message = 'Chapter created successfully';
             }
-        }else{
+        } else {
             $message = 'Chapter created successfully';
         }
 
-        if($request->status != 'scheduled'){
+        if ($request->status != 'scheduled') {
             $request->merge([
                 'scheduled_date' => null,
             ]);
@@ -304,15 +285,14 @@ class ChapterController extends Controller
 
         $chapter = $this->ChapterRepository->createChapter($request->all());
 
-        if(!$request->summary){
-            GenerateSummary::dispatch($chapter->id,$request->content);
+        if (!$request->summary) {
+            GenerateSummary::dispatch($chapter->id, $request->content);
         }
 
         return response()->json([
             'message' => $message,
             'data' => new ChapterResource($chapter)
         ], 201);
-
     }
 
     public function draftCount($id)
@@ -328,7 +308,6 @@ class ChapterController extends Controller
         $draftCount = $novel->chapters()->where('status', '!=', 'published')->count();
 
         return $draftCount;
-
     }
 
     public function chapterStatusCheck(Request $request)
@@ -337,12 +316,12 @@ class ChapterController extends Controller
 
         $novel_id = $request->input('novel_id');
 
-        $chapterStatusCheck = $this->updateChapterStatusCheck($novel_id,$chapter_id);
+        $chapterStatusCheck = $this->updateChapterStatusCheck($novel_id, $chapter_id);
 
         return response()->json($chapterStatusCheck);
     }
 
-    public function updateChapterStatusCheck($novel_id,$chapter_id)
+    public function updateChapterStatusCheck($novel_id, $chapter_id)
     {
         $novel = $this->NovelRepository->findNovel($novel_id);
 
@@ -360,9 +339,9 @@ class ChapterController extends Controller
             ], 404);
         }
 
-        $draft_count = $novel->chapters()->where('id','<', $chapter_id)->where('status' ,'!=', 'published')->count();
+        $draft_count = $novel->chapters()->where('id', '<', $chapter_id)->where('status', '!=', 'published')->count();
 
-        $published_count = $novel->chapters()->where('id','>', $chapter_id)->where('status' ,'==', 'published')->count();
+        $published_count = $novel->chapters()->where('id', '>', $chapter_id)->where('status', '==', 'published')->count();
 
         return [
             'canDraft' => $published_count == 0,
@@ -376,8 +355,8 @@ class ChapterController extends Controller
      * Display the specified resource.
      */
 
-     public function updateChapterShow($id)
-     {
+    public function updateChapterShow($id)
+    {
         $chapter = $this->ChapterRepository->findChapter($id);
 
         if (!$chapter) {
@@ -393,9 +372,9 @@ class ChapterController extends Controller
         return response()->json([
             'data' => new ChapterUpdateResource($chapter)
         ]);
-     }
+    }
 
-    public function show($id,Request $request)
+    public function show($id, Request $request)
     {
         $chapter = $this->ChapterRepository->findChapterWithTrash($id);
         $language = $request->input('language');
@@ -411,8 +390,8 @@ class ChapterController extends Controller
 
         if (Auth::guard('sanctum')->check() && $chapter->status == 'published' && !$chapter->trashed()) {
             $user_id = Auth::guard('sanctum')->user()->id;
-            $this->ChapterRepository->addView($id,$user_id);
-            $this->ChapterRepository->addHistory($id,$user_id);
+            $this->ChapterRepository->addView($id, $user_id);
+            $this->ChapterRepository->addHistory($id, $user_id);
         }
 
         if ($chapter->status != 'published' && !Auth::guard('sanctum')->check() && $chapter->novel->user_id != $user_id) {
@@ -423,15 +402,15 @@ class ChapterController extends Controller
 
         $already_loved = false;
 
-        if($user_id){
+        if ($user_id) {
             $already_loved = $chapter->love()->where('user_id', $user_id)->exists();
         }
 
-        if($language){
-            if($readType == 'summary' && !empty($chapter->summary)){
-                $chapter->summary = $this->translate($chapter->summary,$chapter->novel->genre->genre,$language);
-            }else if(!empty($chapter->content)){
-                $chapter->content = $this->translate($chapter->content,$chapter->novel->genre->genre,$language);
+        if ($language) {
+            if ($readType == 'summary' && !empty($chapter->summary)) {
+                $chapter->summary = $this->translate($chapter->summary, $chapter->novel->genre->genre, $language);
+            } else if (!empty($chapter->content)) {
+                $chapter->content = $this->translate($chapter->content, $chapter->novel->genre->genre, $language);
             }
         }
 
@@ -443,7 +422,8 @@ class ChapterController extends Controller
         ]);
     }
 
-    public function grammarCheck(Request $request){
+    public function grammarCheck(Request $request)
+    {
 
         $request->validate([
             'content' => 'required|string',
@@ -455,14 +435,14 @@ class ChapterController extends Controller
 
 
         $response = Http::withOptions([
-                'proxy' => ''
-            ])->withHeaders([
-                'Content-Type' => 'application/json',
-            ])->post('https://api.textgears.com/analyze', [
-                'text' => $content,
-                'language' => 'en-US',
-                'key' => $apiKey,
-            ]);
+            'proxy' => ''
+        ])->withHeaders([
+            'Content-Type' => 'application/json',
+        ])->post('https://api.textgears.com/analyze', [
+            'text' => $content,
+            'language' => 'en-US',
+            'key' => $apiKey,
+        ]);
 
         $data = $response["response"];
 
@@ -497,20 +477,16 @@ class ChapterController extends Controller
                 'status' => 'draft',
             ]);
             $message = 'Chapter updated successfully but it is in draft status because you do not have a published previous chapter';
-        }
-
-        elseif ($request->status === 'draft' && $chapterStatusCheck['canDraft'] == false) {
+        } elseif ($request->status === 'draft' && $chapterStatusCheck['canDraft'] == false) {
             $request->merge([
                 'status' => 'published',
             ]);
             $message = 'Chapter updated successfully but it is in published status because there are published chapters after this chapter';
-        }
-
-        else{
+        } else {
             $message = 'Chapter updated successfully';
         }
 
-        if($request->status != 'scheduled'){
+        if ($request->status != 'scheduled') {
             $request->merge([
                 'scheduled_date' => null,
             ]);
@@ -528,13 +504,13 @@ class ChapterController extends Controller
      * Remove the specified resource from storage.
      */
 
-    
+
 
     public function destroy($id)
     {
         $chapter = $this->ChapterRepository->findChapterWithTrash($id);
 
-        if(!$chapter){
+        if (!$chapter) {
             return response()->json([
                 'message' => 'Chapter not found',
             ], 404);
@@ -542,7 +518,7 @@ class ChapterController extends Controller
 
         $this->authorize('delete', $chapter);
 
-        if($chapter->status != 'draft'){
+        if ($chapter->status != 'draft') {
             return response()->json([
                 'message' => 'Chapter is not in draft status',
             ], 400);
@@ -559,7 +535,7 @@ class ChapterController extends Controller
     {
         $chapter = $this->ChapterRepository->findChapterWithTrash($id);
 
-        if(!$chapter){
+        if (!$chapter) {
             return response()->json([
                 'message' => 'Chapter not found',
             ], 404);
@@ -594,7 +570,7 @@ class ChapterController extends Controller
         if ($already_loved) {
             $chapter->love()->where('user_id', $userID)->delete();
             $message = 'Chapter unloved successfully';
-        }else{
+        } else {
             $chapter->love()->create([
                 'user_id' => $userID,
             ]);
@@ -604,7 +580,6 @@ class ChapterController extends Controller
         return response()->json([
             'message' => $message,
         ], 200);
-
     }
 
     public function chapterShare($id)
@@ -624,7 +599,7 @@ class ChapterController extends Controller
             return;
         }
 
-        RateLimiter::hit($key, 60*60); // allow 5 attempts per 60 seconds
+        RateLimiter::hit($key, 60 * 60); // allow 5 attempts per 60 seconds
 
         $this->ChapterRepository->share($id);
 
@@ -632,5 +607,4 @@ class ChapterController extends Controller
             'message' => 'Chapter shared successfully',
         ]);
     }
-
 }
