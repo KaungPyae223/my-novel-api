@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateNovelRequest;
 use App\Http\Resources\NovelChapterResource;
 use App\Http\Resources\NovelResource;
 use App\Http\Resources\PostResource;
+use App\Http\Resources\ReviewResource;
 use App\Http\Resources\UserChapterWithAuth;
 use App\Http\Resources\UserChapterWithoutAuth;
 use App\Http\Utils\GenerateUniqueName;
@@ -250,9 +251,7 @@ class NovelController extends Controller
         $this->authorize('view', $novel);
 
 
-        return response()->json([
-            'data' => NovelChapterResource::collection($novel->chapters),
-        ]);
+        return NovelChapterResource::collection($novel->chapters);
     }
 
     public function getTrashedChapters($id)
@@ -269,9 +268,7 @@ class NovelController extends Controller
 
         $chapters = $this->novelRepository->getTrashedChapters($novel->id);
 
-        return response()->json([
-            'data' => NovelChapterResource::collection($chapters),
-        ]);
+        return NovelChapterResource::collection($chapters);
     }
 
     public function showUserNovelChapter($id)
@@ -292,9 +289,7 @@ class NovelController extends Controller
             $data = UserChapterWithoutAuth::collection($chapters);
         }
 
-        return response()->json([
-            'data' => $data,
-        ]);
+        return $data;
     }
 
     public function getMyNovels(Request $request)
@@ -305,9 +300,7 @@ class NovelController extends Controller
 
         $novels = $this->novelRepository->getMyNovels(Auth::user()->id,$q);
 
-        return response()->json([
-            'data' => NovelResource::collection($novels),
-        ]);
+        return NovelResource::collection($novels);
     }
 
     public function getMyNovelsKPI()
@@ -464,13 +457,9 @@ class NovelController extends Controller
             $user_id = Auth::guard('sanctum')->user()->id;
         }
 
-
-
         $novelPosts = $this->novelRepository->getNovelPost($id);
 
-        return response()->json([
-            'data' => PostResource::collection($novelPosts),
-        ]);
+        return PostResource::collection($novelPosts);
     }
 
     public function novelLove($id)
@@ -498,6 +487,22 @@ class NovelController extends Controller
         return response()->json([
             'message' => $message,
         ], 200);
+    }
+
+    public function novelReviews($id){
+
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Chapter not found',
+            ], 404);
+        }
+
+        $reviews = $this->novelRepository->getNovelReviews($id);
+
+        return ReviewResource::collection($reviews);
+
     }
 
 

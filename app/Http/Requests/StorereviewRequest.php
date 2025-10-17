@@ -11,7 +11,7 @@ class StorereviewRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,8 @@ class StorereviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'novel_id' => 'required|exists:novels,id',
+            'review' => 'required',
         ];
     }
 }

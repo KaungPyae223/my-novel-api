@@ -96,8 +96,7 @@ class HomeController extends Controller
                 (CASE WHEN id NOT IN (" . implode(',', $history) . ") THEN 2 ELSE 0 END) +
                 (DATEDIFF(NOW(), created_at) / 10) DESC
             ")
-            ->limit(10)
-            ->get();
+            ->paginate(10);
 
         return HomeChapterResource::collection($chapters);
     }
@@ -130,8 +129,7 @@ class HomeController extends Controller
                  (CASE WHEN postable_id IN (" . implode(',', $history) . ") THEN 1 ELSE 0 END)) -
                 (DATEDIFF(NOW(), created_at) / 10) DESC
             ")
-            ->limit(10)
-            ->get();
+            ->paginate(10);
 
         return HomePostResource::collection($posts);
     }

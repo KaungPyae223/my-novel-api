@@ -134,7 +134,13 @@ class NovelRepository
     public function getNovelPost($id)
     {
         $novel = $this->findNovelWithTrash($id);
-        return $novel->posts()->orderBy('created_at', 'desc')->get();
+        return $novel->posts()->orderBy('created_at', 'desc')->paginate(10);
+    }
+
+    public function getNovelReviews($id)
+    {
+        $novel = $this->findNovelWithTrash($id);
+        return $novel->review()->orderBy('created_at', 'desc')->paginate(3);
     }
 
     public function addView($id,$user_id)

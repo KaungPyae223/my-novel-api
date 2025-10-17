@@ -5,12 +5,22 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorereviewRequest;
 use App\Http\Requests\UpdatereviewRequest;
 use App\Models\review;
+use App\Repositories\ReviewRepository;
+use Illuminate\Support\Facades\Auth;
 
 class ReviewController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+
+    protected $reviewRepository;
+
+    public function __construct(ReviewRepository $reviewRepository)
+    {
+        $this->reviewRepository = $reviewRepository;
+    }
+
     public function index()
     {
         //
@@ -21,7 +31,27 @@ class ReviewController extends Controller
      */
     public function store(StorereviewRequest $request)
     {
-        //
+
+        $user_id = Auth::user()->id;
+
+        $checkReview = $this->reviewRepository->checkReview($request->novel_id,$user_id);
+
+        if($checkReview){
+            return response()->json([
+                'message' => 'You can only review once every month',
+            ], 400);
+        }
+
+        $request->merge([
+            'user_id' => $user_id,
+        ]);
+
+        $this->reviewRepository->create($request->all());
+
+        return response()->json([
+            'message' => 'Review submitted successfully',
+        ], 201);
+
     }
 
     /**

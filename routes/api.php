@@ -8,6 +8,7 @@ use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\NovelController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\QuerySuggestionController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -78,6 +79,7 @@ Route::prefix("v1")->group(function () {
                 Route::get('chapters/update-chapter-show/{id}', 'updateChapterShow');
                 Route::post('chapters/restore/{id}', 'restoreChapter');
             });
+            Route::post('reviews', [ReviewController::class, 'store']);
         });
         Route::post('chapters/loved/{id}', [ChapterController::class, 'chapterLove']);
 
@@ -105,6 +107,7 @@ Route::prefix("v1")->group(function () {
         Route::get('user/novel-chapters/{id}', 'showUserNovelChapter');
         Route::get('novels/posts/{id}', 'getNovelPosts');
         Route::post('novels/share/{id}', 'novelShare');
+        Route::get('novels/reviews/{id}', 'novelReviews');
     });
 
     Route::controller(ChapterController::class)->group(function () {
