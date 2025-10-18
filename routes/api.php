@@ -108,6 +108,7 @@ Route::prefix("v1")->group(function () {
         Route::get('novels/posts/{id}', 'getNovelPosts');
         Route::post('novels/share/{id}', 'novelShare');
         Route::get('novels/reviews/{id}', 'novelReviews');
+        Route::get('novels/last-read-chapter/{id}', 'getUserLastReadChapter');
     });
 
     Route::controller(ChapterController::class)->group(function () {

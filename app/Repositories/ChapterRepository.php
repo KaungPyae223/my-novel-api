@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Http\Utils\WriteLog;
 use App\Models\Chapter;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ChapterRepository
 {
@@ -32,12 +33,8 @@ class ChapterRepository
     {
         $chapter = $this->findChapter($id);
 
-        $user = Auth::user();
-        if (!$user || !$user->save_history) {
-            return;
-        }
-
         $alreadyExists = $chapter->history()->where('user_id', $user_id)->exists();
+       
         if ($alreadyExists) {
             return;
         }

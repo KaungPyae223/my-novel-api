@@ -56,4 +56,6 @@ class Chapter extends Model
         return $this->morphMany(Log::class, 'logable');
     }
 
+      
+
 }

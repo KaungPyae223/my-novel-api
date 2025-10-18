@@ -376,6 +376,8 @@ class ChapterController extends Controller
 
     public function show($id, Request $request)
     {
+
+    
         $chapter = $this->ChapterRepository->findChapterWithTrash($id);
         $language = $request->input('language');
         $readType = $request->input('read_type');
