@@ -20,6 +20,7 @@ use App\Repositories\PostRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 
 class NovelController extends Controller
@@ -230,12 +231,13 @@ class NovelController extends Controller
     }
 
 
-    public function getNovelChapters($id)
+    public function getNovelChapters($id, Request $request)
     {
 
-
         $novel = $this->novelRepository->findNovel($id);
-
+        $q = $request->input('q');
+        $filter = $request->input('filter');
+        $sort = $request->input('sort','newest');
 
         if (!$novel) {
             return response()->json([
@@ -245,8 +247,37 @@ class NovelController extends Controller
 
         $this->authorize('view', $novel);
 
+        $chapters = $novel->chapters();
+            
+        if($q) {
+            $chapters->where('title', 'like', '%' . $q . '%');
+        }
 
-        return NovelChapterResource::collection($novel->chapters);
+        if($filter && $filter != 'all') {
+            $chapters->where('status', $filter);
+        }
+
+        if($sort) {
+            switch ($sort) {
+                case 'newest':
+                    $chapters->orderByDesc('created_at');
+                    break;
+                case 'oldest':
+                    $chapters->orderBy('created_at');
+                    break;
+                case 'az':
+                    $chapters->orderBy('title');
+                    break;
+                case 'za':
+                    $chapters->orderByDesc('title');
+                    break;
+            }
+        }
+
+        $chapters = $chapters->paginate(15);
+
+
+        return NovelChapterResource::collection($chapters);
     }
 
     public function getTrashedChapters($id)
@@ -302,7 +333,7 @@ class NovelController extends Controller
                 }
             }
 
-            $page = $firstUnreadChapterIndex ? floor($firstUnreadChapterIndex / 10) + 1 : 1;
+            $page = $firstUnreadChapterIndex ? floor($firstUnreadChapterIndex / 15) + 1 : 1;
 
             return response()->json([
                 'last_read_chapter' => $firstUnreadChapter,
@@ -319,6 +350,7 @@ class NovelController extends Controller
     public function showUserNovelChapter($id, Request $request)
     {
         $novel = $this->novelRepository->findNovel($id);
+        $q = $request->input('q');
 
         if (!$novel) {
             return response()->json([
@@ -327,9 +359,14 @@ class NovelController extends Controller
         }
 
         $chapters = $novel->chapters()
-            ->where('status', 'published')
-            ->orderBy('created_at')
-            ->paginate(10);
+            ->where('status', 'published');
+
+        if($q) {
+            $chapters->where('title', 'like', '%' . $q . '%');
+        }
+
+        $chapters = $chapters->orderBy('created_at')
+            ->paginate(15);
 
         return UserChapterResource::collection($chapters);
     }
