@@ -53,7 +53,7 @@ class Novel extends Model
 
     public function logs()
     {
-        return $this->morphMany(Log::class, 'logable');
+        return $this->morphMany(Log::class, 'parentable');
     }
 
     public function posts()

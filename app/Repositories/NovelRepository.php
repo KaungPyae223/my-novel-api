@@ -92,10 +92,7 @@ class NovelRepository
         $novel = $this->findNovelWithTrash($id);
         $novelID = $novel->id;
            
-        $logs = Log::query()->where(function ($query) use ($novelID) {
-            $query->where('parentable_id', $novelID)
-                ->where('parentable_type', Novel::class);
-        });
+        $logs = $novel->logs();
         
         if($model == 'novel'){
             $logs->where('logable_type', Novel::class);

@@ -19,8 +19,4 @@ class View extends Model
         return $this->morphTo();
     }
 
-    public function novel()
-    {
-        return $this->belongsTo(Novel::class);
-    }
 }

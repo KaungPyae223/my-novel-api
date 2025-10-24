@@ -41,8 +41,4 @@ class Post extends Model
         return $this->belongsTo(User::class,'user_id');
     }
 
-    public function novel()
-    {
-        return $this->belongsTo(Novel::class,'postable_id','id');
-    }
 }

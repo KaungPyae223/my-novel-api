@@ -12,7 +12,7 @@ class WriteLog {
     public static function write($model, string $action, $data)
     {
 
-        $parent = $model instanceof Novel ? $model : ($model->novel ?? null);
+        $parent = $model instanceof Novel ? $model : ($model->novel ? $model->novel : $model->postable);
 
         Log::create([
             'title' => $model->title ?? null,

@@ -14,8 +14,9 @@ class History extends Model
         'user_id',
     ];
 
-    public function novel()
+    public function historyable()
     {
-        return $this->belongsTo(Novel::class);
+        return $this->morphTo();
     }
+  
 }
