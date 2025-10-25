@@ -17,6 +17,7 @@ use App\Http\Utils\ImageUtils;
 use App\Http\Utils\ShortNumber;
 use App\Jobs\DeleteImage;
 use App\Models\Novel;
+use App\Models\User;
 use App\Repositories\NovelRepository;
 use App\Repositories\PostRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -662,6 +663,14 @@ class NovelController extends Controller
             );
         }
 
+        $user = User::find($userID)->first();
+        if (!$user) {
+            return response()->json(
+                'User not found',
+                404
+            );
+        }
+
         $this->authorize('view', $novel);
 
         $this->novelRepository->banUser($novel, $userID);
@@ -681,6 +690,14 @@ class NovelController extends Controller
         if (!$novel) {
             return response()->json(
                 'Novel not found',
+                404
+            );
+        }
+
+        $user = User::find($userID)->first();
+        if (!$user) {
+            return response()->json(
+                'User not found',
                 404
             );
         }
