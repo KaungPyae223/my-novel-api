@@ -19,7 +19,6 @@ use App\Jobs\DeleteImage;
 use App\Models\Novel;
 use App\Models\User;
 use App\Repositories\NovelRepository;
-use App\Repositories\PostRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,7 +26,6 @@ use Illuminate\Support\Facades\RateLimiter;
 
 class NovelController extends Controller
 {
-
     use AuthorizesRequests;
 
     /**
@@ -35,12 +33,10 @@ class NovelController extends Controller
      */
 
     protected $novelRepository;
-    protected $postRepository;
 
-    public function __construct(NovelRepository $novelRepository, PostRepository $postRepository)
+    public function __construct(NovelRepository $novelRepository)
     {
         $this->novelRepository = $novelRepository;
-        $this->postRepository = $postRepository;
     }
 
     public function index()
@@ -52,21 +48,13 @@ class NovelController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreNovelRequest $request)
     {
-
         $unique_name = GenerateUniqueName::generate($request->title);
-
-
         $count = Novel::where('unique_name', 'like', '%' . $unique_name . '%')->count();
-
         $unique_name = $unique_name . '-' . ($count + 1);
 
         $uploadImage = $request->file('cover_image');
-
         $uploaded = ImageUtils::uploadImage($uploadImage);
 
         $request->merge([
@@ -86,11 +74,9 @@ class NovelController extends Controller
 
     public function novelImageUpload($id, Request $request)
     {
-
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ]);
-
 
         $novel = $this->novelRepository->findNovel($id);
 
@@ -107,7 +93,6 @@ class NovelController extends Controller
         }
 
         $uploadImage = $request->file('image');
-
         $uploaded = ImageUtils::uploadImage($uploadImage);
 
         $this->novelRepository->update($novel->id, [
@@ -120,14 +105,8 @@ class NovelController extends Controller
         ]);
     }
 
-
-
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
-
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
@@ -137,11 +116,9 @@ class NovelController extends Controller
         }
 
         $this->authorize('view', $novel);
-
         $novel->already_loved = false;
 
         return response()->json([
-
             'data' => new NovelResource($novel),
         ]);
     }
@@ -156,42 +133,30 @@ class NovelController extends Controller
             ], 404);
         }
 
-        if ($novel->status != 'published' && !Auth::guard('sanctum')->check() && $novel->user_id != $user_id) {
+        $user_id = Auth::guard('sanctum')->check() ? Auth::guard('sanctum')->user()->id : null;
+
+        if ($novel->status != 'published' && !$user_id && $novel->user_id != $user_id) {
             return response()->json([
                 'message' => 'Novel not found',
             ], 404);
         }
 
-        $user_id = null;
-
-        if (Auth::guard('sanctum')->check()) {
-            $user_id = Auth::guard('sanctum')->user()->id;
+        if ($user_id) {
             $this->novelRepository->addHistory($id, $user_id);
             $this->novelRepository->addView($id, $user_id);
         }
 
-        $already_loved = false;
-        $already_favorited = false;
-
-        if ($user_id) {
-            $already_loved = $novel->love()->where('user_id', $user_id)->exists();
-            $already_favorited = $novel->favorite()->where('user_id', $user_id)->exists();
-        }
+        $already_loved = $user_id ? $novel->love()->where('user_id', $user_id)->exists() : false;
+        $already_favorited = $user_id ? $novel->favorite()->where('user_id', $user_id)->exists() : false;
 
         $novel->already_loved = $already_loved;
         $novel->already_favorited = $already_favorited;
-
 
         return response()->json([
             'data' => new NovelResource($novel),
         ]);
     }
 
-
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateNovelRequest $request, $id)
     {
         $novel = $this->novelRepository->findNovel($id);
@@ -203,8 +168,6 @@ class NovelController extends Controller
         }
 
         $this->authorize('update', $novel);
-
-
         $this->novelRepository->update($novel->id, $request->all());
 
         return response()->json([
@@ -215,8 +178,6 @@ class NovelController extends Controller
 
     public function getNovelLogs($id, Request $request)
     {
-
-
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
@@ -226,16 +187,13 @@ class NovelController extends Controller
         }
 
         $this->authorize('view', $novel);
-
         $logs = $this->novelRepository->getNovelLogs($id, $request);
 
         return response()->json($logs);
     }
 
-
     public function getNovelChapters($id, Request $request)
     {
-
         $novel = $this->novelRepository->findNovel($id);
         $q = $request->input('q');
         $filter = $request->input('filter');
@@ -248,7 +206,6 @@ class NovelController extends Controller
         }
 
         $this->authorize('view', $novel);
-
         $chapters = $novel->chapters();
 
         if ($q) {
@@ -259,26 +216,22 @@ class NovelController extends Controller
             $chapters->where('status', $filter);
         }
 
-        if ($sort) {
-            switch ($sort) {
-                case 'newest':
-                    $chapters->orderByDesc('created_at');
-                    break;
-                case 'oldest':
-                    $chapters->orderBy('created_at');
-                    break;
-                case 'az':
-                    $chapters->orderBy('title');
-                    break;
-                case 'za':
-                    $chapters->orderByDesc('title');
-                    break;
-            }
+        switch ($sort) {
+            case 'newest':
+                $chapters->orderByDesc('created_at');
+                break;
+            case 'oldest':
+                $chapters->orderBy('created_at');
+                break;
+            case 'az':
+                $chapters->orderBy('title');
+                break;
+            case 'za':
+                $chapters->orderByDesc('title');
+                break;
         }
 
         $chapters = $chapters->paginate(15);
-
-
         return NovelChapterResource::collection($chapters);
     }
 
@@ -293,7 +246,6 @@ class NovelController extends Controller
         }
 
         $this->authorize('view', $novel);
-
         $chapters = $this->novelRepository->getTrashedChapters($novel->id);
 
         return NovelChapterResource::collection($chapters);
@@ -316,9 +268,7 @@ class NovelController extends Controller
                 ->where('status', 'published')
                 ->orderBy('created_at');
 
-
             $allChapters = $chapters->pluck('id')->toArray();
-
             $readChapters = $chapters->whereHas('view', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
@@ -375,10 +325,7 @@ class NovelController extends Controller
 
     public function getMyNovels(Request $request)
     {
-
         $q = $request->input('q');
-
-
         $novels = $this->novelRepository->getMyNovels(Auth::user()->id, $q);
 
         return NovelResource::collection($novels);
@@ -386,7 +333,6 @@ class NovelController extends Controller
 
     public function getMyNovelsKPI()
     {
-
         $user = Auth::user();
 
         $totalNovels = $user->novels->count();
@@ -402,12 +348,8 @@ class NovelController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
-
         $novel = $this->novelRepository->findNovelWithTrash($id);
 
         if (!$novel) {
@@ -417,8 +359,6 @@ class NovelController extends Controller
         }
 
         $this->authorize('delete', $novel);
-
-
         $this->novelRepository->delete($novel->id);
 
         return response()->json([
@@ -428,7 +368,6 @@ class NovelController extends Controller
 
     public function novelFavorite($id)
     {
-
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
@@ -452,7 +391,6 @@ class NovelController extends Controller
         ]);
     }
 
-
     public function novelShare($id)
     {
         $novel = $this->novelRepository->findNovel($id);
@@ -471,7 +409,6 @@ class NovelController extends Controller
         }
 
         RateLimiter::hit($key, 60 * 60); // allow 5 attempts per 60 seconds
-
         $this->novelRepository->share($id);
 
         return response()->json([
@@ -479,14 +416,10 @@ class NovelController extends Controller
         ]);
     }
 
-
-
     // Post
-
 
     public function createNovelPost($id, StorePostRequest $request)
     {
-
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
@@ -496,8 +429,6 @@ class NovelController extends Controller
         }
 
         $this->authorize('update', $novel);
-
-
         $uploadImage = $request->file('post_image');
 
         if ($uploadImage) {
@@ -522,7 +453,6 @@ class NovelController extends Controller
 
     public function getNovelPosts($id)
     {
-
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
@@ -531,12 +461,7 @@ class NovelController extends Controller
             ], 404);
         }
 
-        $user_id = null;
-
-        if (Auth::guard('sanctum')->check()) {
-            $user_id = Auth::guard('sanctum')->user()->id;
-        }
-
+        $user_id = Auth::guard('sanctum')->check() ? Auth::guard('sanctum')->user()->id : null;
         $novelPosts = $this->novelRepository->getNovelPost($id);
 
         return PostResource::collection($novelPosts);
@@ -553,7 +478,6 @@ class NovelController extends Controller
         }
 
         $userID = Auth::user()->id;
-
         $already_loved = $novel->love()->where('user_id', $userID)->exists();
 
         if ($already_loved) {
@@ -571,7 +495,6 @@ class NovelController extends Controller
 
     public function novelReviews($id)
     {
-
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
@@ -581,7 +504,6 @@ class NovelController extends Controller
         }
 
         $reviews = $this->novelRepository->getNovelReviews($id);
-
         return ReviewResource::collection($reviews);
     }
 
@@ -596,7 +518,6 @@ class NovelController extends Controller
         }
 
         $this->authorize('writeLetter', $novel);
-
         $request->merge([
             'user_id' => Auth::user()->id,
         ]);
@@ -620,7 +541,6 @@ class NovelController extends Controller
         }
 
         $this->authorize('view', $novel);
-
         $letters = $this->novelRepository->getLetters($id);
 
         return LetterResource::collection($letters);
@@ -637,50 +557,34 @@ class NovelController extends Controller
         }
 
         if (Auth::guard('sanctum')->check()) {
-
             $user_id = Auth::guard('sanctum')->user()->id;
-
             $letters = $this->novelRepository->getUserLetter($id, $user_id);
 
             return LetterResource::collection($letters);
         } else {
-            return response()->json(
-                'unauthorized',
-                200
-            );
+            return response()->json('unauthorized', 200);
         }
     }
 
     public function banUser($novelID, $userID)
     {
-
         $novel = $this->novelRepository->findNovel($novelID);
 
         if (!$novel) {
-            return response()->json(
-                'Novel not found',
-                404
-            );
+            return response()->json('Novel not found', 404);
         }
 
-        $user = User::find($userID)->first();
+        $user = User::find($userID);
         if (!$user) {
-            return response()->json(
-                'User not found',
-                404
-            );
+            return response()->json('User not found', 404);
         }
 
         $this->authorize('view', $novel);
-
         $this->novelRepository->banUser($novel, $userID);
 
-        return response()->json(
-            [
-                'message' => 'User banned successfully'
-            ],
-            200
-        );
+        return response()->json([
+            'message' => 'User banned successfully'
+        ], 200);
     }
 
     public function unbanUser($novelID, $userID)
@@ -688,29 +592,19 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($novelID);
 
         if (!$novel) {
-            return response()->json(
-                'Novel not found',
-                404
-            );
+            return response()->json('Novel not found', 404);
         }
 
-        $user = User::find($userID)->first();
+        $user = User::find($userID);
         if (!$user) {
-            return response()->json(
-                'User not found',
-                404
-            );
+            return response()->json('User not found', 404);
         }
 
         $this->authorize('view', $novel);
-
         $this->novelRepository->unbanUser($novel, $userID);
 
-        return response()->json(
-            [
-                'message' => 'User unban successfully'
-            ],
-            200
-        );
+        return response()->json([
+            'message' => 'User unban successfully'
+        ], 200);
     }
 }
