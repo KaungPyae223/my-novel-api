@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LetterController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\NovelController;
 use App\Http\Controllers\PostController;
@@ -59,6 +60,15 @@ Route::prefix("v1")->group(function () {
                 Route::get('my-novels/kpi', 'getMyNovelsKPI');
                 Route::get('novel-logs/{id}', 'getNovelLogs');
                 Route::get('novel-trashed-chapters/{id}', 'getTrashedChapters');
+                Route::get('novels/letters/{id}', 'getLetters');
+                Route::post('novels/create-letter/{id}', 'writeLetter');
+                Route::post('novels/ban-user/{novelID}/{userID}', 'banUser');
+                Route::post('novels/unban-user/{novelID}/{userID}', 'unbanUser');
+            });
+            Route::controller(LetterController::class)->group(function () {
+                Route::put('novels/reply-letter/{id}', 'replyLetter');
+                Route::delete('novels/reader/delete-letter/{id}', 'deleteReaderLetter');
+                Route::delete('novels/author/delete-letter/{id}', 'deleteAuthorLetter');
             });
         });
         Route::controller(NovelController::class)->group(function () {
@@ -109,6 +119,7 @@ Route::prefix("v1")->group(function () {
         Route::post('novels/share/{id}', 'novelShare');
         Route::get('novels/reviews/{id}', 'novelReviews');
         Route::get('novels/last-read-chapter/{id}', 'getUserLastReadChapter');
+        Route::get('novels/user-letter/{id}', 'getUserLetter');
     });
 
     Route::controller(ChapterController::class)->group(function () {

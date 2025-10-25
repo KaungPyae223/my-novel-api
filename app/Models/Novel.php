@@ -90,4 +90,14 @@ class Novel extends Model
     {
         return $this->morphMany(Log::class, 'logable');
     }
+
+    public function letter()
+    {
+        return $this->hasMany(Letter::class, 'novel_id', 'id');
+    }
+
+    public function ban()
+    {
+        return $this->morphMany(BanUser::class, 'banable');
+    }
 }

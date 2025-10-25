@@ -25,6 +25,7 @@ return new class extends Migration
             $table->integer('share_count')->default(0);
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('genre_id')->constrained('genres')->cascadeOnDelete();
+            $table->enum('open_letter', ['open', 'close'])->default('open');
             $table->softDeletes();
             $table->timestamps();
         });

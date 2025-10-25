@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLetterRequest;
 use App\Http\Requests\StoreNovelRequest;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdateNovelRequest;
+use App\Http\Resources\LetterResource;
 use App\Http\Resources\NovelChapterResource;
 use App\Http\Resources\NovelResource;
 use App\Http\Resources\PostResource;
@@ -236,7 +238,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
         $q = $request->input('q');
         $filter = $request->input('filter');
-        $sort = $request->input('sort','newest');
+        $sort = $request->input('sort', 'newest');
 
         if (!$novel) {
             return response()->json([
@@ -247,16 +249,16 @@ class NovelController extends Controller
         $this->authorize('view', $novel);
 
         $chapters = $novel->chapters();
-            
-        if($q) {
+
+        if ($q) {
             $chapters->where('title', 'like', '%' . $q . '%');
         }
 
-        if($filter && $filter != 'all') {
+        if ($filter && $filter != 'all') {
             $chapters->where('status', $filter);
         }
 
-        if($sort) {
+        if ($sort) {
             switch ($sort) {
                 case 'newest':
                     $chapters->orderByDesc('created_at');
@@ -360,7 +362,7 @@ class NovelController extends Controller
         $chapters = $novel->chapters()
             ->where('status', 'published');
 
-        if($q) {
+        if ($q) {
             $chapters->where('title', 'like', '%' . $q . '%');
         }
 
@@ -580,5 +582,118 @@ class NovelController extends Controller
         $reviews = $this->novelRepository->getNovelReviews($id);
 
         return ReviewResource::collection($reviews);
+    }
+
+    public function writeLetter($id, StoreLetterRequest $request)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        $this->authorize('writeLetter', $novel);
+
+        $request->merge([
+            'user_id' => Auth::user()->id,
+        ]);
+
+        $letter = $this->novelRepository->createLetter($id, $request->all());
+
+        return response()->json([
+            'message' => 'Letter created successfully',
+            'letter' => $letter,
+        ]);
+    }
+
+    public function getLetters($id)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        $this->authorize('view', $novel);
+
+        $letters = $this->novelRepository->getLetters($id);
+
+        return LetterResource::collection($letters);
+    }
+
+    public function getUserLetter($id)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
+        if (Auth::guard('sanctum')->check()) {
+
+            $user_id = Auth::guard('sanctum')->user()->id;
+
+            $letters = $this->novelRepository->getUserLetter($id, $user_id);
+
+            return LetterResource::collection($letters);
+        } else {
+            return response()->json(
+                'unauthorized',
+                200
+            );
+        }
+    }
+
+    public function banUser($novelID, $userID)
+    {
+
+        $novel = $this->novelRepository->findNovel($novelID);
+
+        if (!$novel) {
+            return response()->json(
+                'Novel not found',
+                404
+            );
+        }
+
+        $this->authorize('view', $novel);
+
+        $this->novelRepository->banUser($novel, $userID);
+
+        return response()->json(
+            [
+                'message' => 'User banned successfully'
+            ],
+            200
+        );
+    }
+
+    public function unbanUser($novelID, $userID)
+    {
+        $novel = $this->novelRepository->findNovel($novelID);
+
+        if (!$novel) {
+            return response()->json(
+                'Novel not found',
+                404
+            );
+        }
+
+        $this->authorize('view', $novel);
+
+        $this->novelRepository->unbanUser($novel, $userID);
+
+        return response()->json(
+            [
+                'message' => 'User unban successfully'
+            ],
+            200
+        );
     }
 }

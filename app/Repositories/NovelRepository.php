@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Http\Utils\WriteLog;
 use App\Jobs\DeleteImage;
 use App\Models\Chapter;
+use App\Models\Letter;
 use App\Models\Log;
 use App\Models\Novel;
 use App\Models\Post;
@@ -15,7 +16,8 @@ class NovelRepository
 
     protected $novel;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->novel = new Novel();
     }
 
@@ -29,7 +31,7 @@ class NovelRepository
         return $this->novel->withTrashed()->find($id);
     }
 
-    public function getMyNovels($user_id,$q)
+    public function getMyNovels($user_id, $q)
     {
 
         $query = $this->novel->where('user_id', $user_id);
@@ -44,7 +46,6 @@ class NovelRepository
         }
 
         return $query->get();
-
     }
 
 
@@ -75,38 +76,38 @@ class NovelRepository
                 dispatch(new DeleteImage($novel->image_public_id));
             }
             return $novel->forceDelete();
-        }else{
-           
+        } else {
+
             WriteLog::write($novel, 'trashed', $novel->getAttributes());
             return $novel->delete();
         }
     }
 
-    public function getNovelLogs($id,$request)
+    public function getNovelLogs($id, $request)
     {
 
         $model = $request->input('tab', 'novel');
-        $action = $request->input('action','all');
+        $action = $request->input('action', 'all');
         $q = $request->input('q', '');
 
         $novel = $this->findNovelWithTrash($id);
         $novelID = $novel->id;
-           
+
         $logs = $novel->logs();
-        
-        if($model == 'novel'){
+
+        if ($model == 'novel') {
             $logs->where('logable_type', Novel::class);
-        } else if($model == 'chapters') {
+        } else if ($model == 'chapters') {
             $logs->where('logable_type', Chapter::class);
         } else {
             $logs->where('logable_type', Post::class);
         }
 
-        if($action !== 'all'){
+        if ($action !== 'all') {
             $logs->where('action', $action);
         }
 
-        if($q){
+        if ($q) {
             $logs->where(function ($query) use ($q) {
                 $query->where('title', 'like', '%' . $q . '%')
                     ->orWhere('description', 'like', '%' . $q . '%')
@@ -114,14 +115,13 @@ class NovelRepository
                     ->orWhere('user_agent', 'like', '%' . $q . '%');
             });
         }
-        
+
         $logs = $logs->with('user')->orderBy('created_at', 'desc')->paginate(10);
 
         return $logs;
-        
     }
 
-    public function createNovelPost($id,$data)
+    public function createNovelPost($id, $data)
     {
         $novel = $this->findNovel($id);
         $post = $novel->posts()->create($data);
@@ -140,13 +140,13 @@ class NovelRepository
         return $novel->review()->orderBy('created_at', 'desc')->paginate(3);
     }
 
-    public function addView($id,$user_id)
+    public function addView($id, $user_id)
     {
         $novel = $this->findNovelWithTrash($id);
 
-        $last_view = $novel->view()->where('user_id', $user_id)->latest()->first() ;
+        $last_view = $novel->view()->where('user_id', $user_id)->latest()->first();
 
-        if(!$last_view || $last_view->created_at->diffInMinutes(now()) >= 5){
+        if (!$last_view || $last_view->created_at->diffInMinutes(now()) >= 5) {
             $novel->view()->create([
                 'user_id' => $user_id,
             ]);
@@ -211,4 +211,44 @@ class NovelRepository
         return $novel->chapters()->onlyTrashed()->get();
     }
 
+    public function createLetter($id, $data)
+    {
+        $novel = $this->findNovel($id);
+        $letter = $novel->letter()->create($data);
+        return $letter;
+    }
+
+    public function getLetters($id)
+    {
+        $novel = $this->findNovel($id);
+        return $novel->letter()->orderBy('created_at', 'desc')->paginate(10);
+    }
+
+    public function getUserLetter($id, $user_id)
+    {
+        $novel = $this->findNovel($id);
+        return $novel->letter()->withTrashed()->where('user_id', $user_id)->orderBy('created_at', 'desc')->paginate(10);
+    }
+
+    public function banUser($id, $user_id)
+    {
+        $novel = $this->findNovel($id);
+
+        $checkBan = $novel->banUser()->where('user_id', $user_id)->first();
+
+        if (!$checkBan) {
+            $novel->banUser()->create(['user_id' => $user_id]);
+        }
+    }
+
+    public function unbanUser($id, $user_id)
+    {
+        $novel = $this->findNovel($id);
+
+        $BanUser = $novel->banUser()->where('user_id', $user_id)->first();
+
+        if ($BanUser) {
+            $BanUser->delete();
+        }
+    }
 }
