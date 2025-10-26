@@ -221,7 +221,16 @@ class NovelRepository
     public function getLetters($id)
     {
         $novel = $this->findNovel($id);
-        return $novel->letter()->orderBy('created_at', 'desc')->paginate(10);
+
+        $letters = $novel->letter()->orderBy('created_at', 'desc')->paginate(10);
+
+        $unreadIds = $letters->where('status', 'unread')->pluck('id');
+
+        if ($unreadIds->isNotEmpty()) {
+            Letter::whereIn('id', $unreadIds)->update(['status' => 'read']);
+        }
+
+        return $letters;
     }
 
     public function getUserLetter($id, $user_id)
@@ -250,5 +259,29 @@ class NovelRepository
         if ($BanUser) {
             $BanUser->delete();
         }
+    }
+
+    public function getBannedUsers($id, $q)
+    {
+
+        $novel = $this->findNovel($id);
+        $bannedUsers = $novel->ban();
+
+        if ($q) {
+            $bannedUsers = $bannedUsers->whereHas('user', function ($query) use ($q) {
+                $query->where('full_name', 'like', '%' . $q . '%')->orWhere('email', 'like', '%' . $q . '%');
+            });
+        }
+
+        $bannedUsers = $bannedUsers->orderBy('created_at', 'desc')->paginate(10);
+
+
+        return $bannedUsers;
+    }
+
+    public function getTotalBannedUsers($id)
+    {
+        $novel = $this->findNovel($id);
+        return $novel->ban()->count();
     }
 }

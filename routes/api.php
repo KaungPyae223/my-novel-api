@@ -62,6 +62,7 @@ Route::prefix("v1")->group(function () {
                 Route::get('novel-trashed-chapters/{id}', 'getTrashedChapters');
                 Route::get('novels/letters/{id}', 'getLetters');
                 Route::post('novels/create-letter/{id}', 'writeLetter');
+                Route::get('novels/banned-users/{id}', 'getBannedUsers');
                 Route::post('novels/ban-user/{novelID}/{userID}', 'banUser');
                 Route::post('novels/unban-user/{novelID}/{userID}', 'unbanUser');
             });

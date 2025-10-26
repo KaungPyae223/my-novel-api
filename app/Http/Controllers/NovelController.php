@@ -6,6 +6,7 @@ use App\Http\Requests\StoreLetterRequest;
 use App\Http\Requests\StoreNovelRequest;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdateNovelRequest;
+use App\Http\Resources\BannedUsersResource;
 use App\Http\Resources\LetterResource;
 use App\Http\Resources\NovelChapterResource;
 use App\Http\Resources\NovelResource;
@@ -47,6 +48,7 @@ class NovelController extends Controller
             'novels' => $novels,
         ]);
     }
+    
 
     public function store(StoreNovelRequest $request)
     {
@@ -543,6 +545,7 @@ class NovelController extends Controller
         $this->authorize('view', $novel);
         $letters = $this->novelRepository->getLetters($id);
 
+
         return LetterResource::collection($letters);
     }
 
@@ -606,5 +609,24 @@ class NovelController extends Controller
         return response()->json([
             'message' => 'User unban successfully'
         ], 200);
+    }
+
+    public function getBannedUsers($id, Request $request)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json('Novel not found', 404);
+        }
+
+        $q = $request->input('q');
+
+        $this->authorize('view', $novel);
+        $bannedUsers = $this->novelRepository->getBannedUsers($id, $q);
+        $totalBannedUsers = $this->novelRepository->getTotalBannedUsers($id);
+
+        return  BannedUsersResource::collection($bannedUsers)->additional([
+            'total' => $totalBannedUsers,
+        ]);
     }
 }
