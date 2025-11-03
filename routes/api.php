@@ -62,9 +62,11 @@ Route::prefix("v1")->group(function () {
                 Route::get('novel-trashed-chapters/{id}', 'getTrashedChapters');
                 Route::get('novels/letters/{id}', 'getLetters');
                 Route::post('novels/create-letter/{id}', 'writeLetter');
-                Route::get('novels/banned-users/{id}', 'getBannedUsers');
                 Route::post('novels/ban-user/{novelID}/{userID}', 'banUser');
                 Route::post('novels/unban-user/{novelID}/{userID}', 'unbanUser');
+                Route::post('novels/toggle-fan-letter/{id}', 'toggleFanLetter');
+                Route::get('novels/fan-letter-status/{id}', 'getFanLetterStatus');
+              
             });
             Route::controller(LetterController::class)->group(function () {
                 Route::put('novels/reply-letter/{id}', 'replyLetter');

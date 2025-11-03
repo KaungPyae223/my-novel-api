@@ -8,9 +8,7 @@ use App\Http\Resources\HomePostResource;
 use App\Models\Chapter;
 use App\Models\Novel;
 use App\Models\Post;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -113,17 +111,18 @@ class HomeController extends Controller
             ->unique()
             ->toArray();
 
+        
         $favoriteNovels = $user->favorites->pluck('novel_id')->toArray();
 
+       
         $history = $history ?: [0];
         $favoriteNovels = $favoriteNovels ?: [0];
 
         $posts = Post::query()
-            ->whereHas('novel', function ($query) {
+            ->whereHasMorph('postable', [Novel::class], function ($query) {
                 $query->where('status', 'published')
                     ->whereNull('deleted_at');
             })
-            ->where('postable_type', Novel::class)
             ->orderByRaw("
                 ((CASE WHEN postable_id IN (" . implode(',', $favoriteNovels) . ") THEN 2 ELSE 0 END) +
                  (CASE WHEN postable_id IN (" . implode(',', $history) . ") THEN 1 ELSE 0 END)) -
@@ -131,6 +130,7 @@ class HomeController extends Controller
             ")
             ->paginate(10);
 
+        
         return HomePostResource::collection($posts);
     }
 }

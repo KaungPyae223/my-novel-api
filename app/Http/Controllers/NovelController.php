@@ -8,6 +8,7 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdateNovelRequest;
 use App\Http\Resources\BannedUsersResource;
 use App\Http\Resources\LetterResource;
+use App\Http\Resources\LogResource;
 use App\Http\Resources\NovelChapterResource;
 use App\Http\Resources\NovelResource;
 use App\Http\Resources\PostResource;
@@ -191,7 +192,7 @@ class NovelController extends Controller
         $this->authorize('view', $novel);
         $logs = $this->novelRepository->getNovelLogs($id, $request);
 
-        return response()->json($logs);
+        return LogResource::collection($logs);
     }
 
     public function getNovelChapters($id, Request $request)
@@ -463,8 +464,7 @@ class NovelController extends Controller
             ], 404);
         }
 
-        $user_id = Auth::guard('sanctum')->check() ? Auth::guard('sanctum')->user()->id : null;
-        $novelPosts = $this->novelRepository->getNovelPost($id);
+         $novelPosts = $this->novelRepository->getNovelPost($id);
 
         return PostResource::collection($novelPosts);
     }
@@ -628,5 +628,37 @@ class NovelController extends Controller
         return  BannedUsersResource::collection($bannedUsers)->additional([
             'total' => $totalBannedUsers,
         ]);
+    }
+
+    public function toggleFanLetter($id)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json('Novel not found', 404);
+        }
+
+        $this->authorize('view', $novel);
+
+        $value = $this->novelRepository->toggleFanLetter($id);
+
+        return response()->json([
+            'message' => "Fan letter $value successfully"
+        ], 200);
+    }
+
+    public function getFanLetterStatus($id)
+    {
+        $novel = $this->novelRepository->findNovel($id);
+
+        if (!$novel) {
+            return response()->json('Novel not found', 404);
+        }
+
+        $this->authorize('view', $novel);
+        
+        return response()->json([
+            'open_letter' => $novel->open_letter,
+        ], 200);
     }
 }

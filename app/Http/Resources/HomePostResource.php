@@ -24,7 +24,7 @@ class HomePostResource extends JsonResource
             'love_count' => ShortNumber::number_shorten($this->love->count()),
             'comment_count' => ShortNumber::number_shorten($this->comment->count()),
             'created_at' => $this->created_at->diffForHumans(),
-            'novel' => collect(new NovelResource($this->novel))->only([
+            'novel' => collect(new NovelResource($this->postable))->only([
                 'id',
                 'title',
                 'image',

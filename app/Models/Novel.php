@@ -24,10 +24,10 @@ class Novel extends Model
         'status',
         'progress',
         'genre_id',
-        'views',
         'image_public_id',
         'user_id',
         'unique_name',
+        'open_letter',
     ];
 
     public function softDelete()
@@ -58,7 +58,7 @@ class Novel extends Model
 
     public function posts()
     {
-        return $this->morphMany(post::class, 'postable');
+        return $this->morphMany(Post::class, 'postable');
     }
 
     public function love()

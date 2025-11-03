@@ -91,7 +91,6 @@ class NovelRepository
         $q = $request->input('q', '');
 
         $novel = $this->findNovelWithTrash($id);
-        $novelID = $novel->id;
 
         $logs = $novel->logs();
 
@@ -284,4 +283,20 @@ class NovelRepository
         $novel = $this->findNovel($id);
         return $novel->ban()->count();
     }
+
+    public function toggleFanLetter($id)
+    {
+        
+        $novel = $this->findNovel($id);
+
+        $openLetter = $novel->open_letter;
+
+        $novel->update([
+            'open_letter' => $openLetter == 'open' ? 'close' : 'open',
+        ]);
+
+        return $novel->open_letter;
+
+    }
+
 }
