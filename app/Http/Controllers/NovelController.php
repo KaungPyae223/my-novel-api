@@ -49,7 +49,7 @@ class NovelController extends Controller
             'novels' => $novels,
         ]);
     }
-    
+
 
     public function store(StoreNovelRequest $request)
     {
@@ -464,7 +464,7 @@ class NovelController extends Controller
             ], 404);
         }
 
-         $novelPosts = $this->novelRepository->getNovelPost($id);
+        $novelPosts = $this->novelRepository->getNovelPost($id);
 
         return PostResource::collection($novelPosts);
     }
@@ -520,6 +520,15 @@ class NovelController extends Controller
         }
 
         $this->authorize('writeLetter', $novel);
+
+        $checkLetter = $novel->letter()->where('user_id', Auth::user()->id)->where('created_at', '>=', now()->startOfDay())->exists();
+
+        if ($checkLetter) {
+            return response()->json([
+                'message' => 'You have already written a letter',
+            ], 400);
+        }
+
         $request->merge([
             'user_id' => Auth::user()->id,
         ]);
@@ -576,14 +585,15 @@ class NovelController extends Controller
         if (!$novel) {
             return response()->json('Novel not found', 404);
         }
-
+      
         $user = User::find($userID);
         if (!$user) {
             return response()->json('User not found', 404);
         }
 
         $this->authorize('view', $novel);
-        $this->novelRepository->banUser($novel, $userID);
+
+        $this->novelRepository->banUser($novelID, $userID);
 
         return response()->json([
             'message' => 'User banned successfully'
@@ -604,7 +614,7 @@ class NovelController extends Controller
         }
 
         $this->authorize('view', $novel);
-        $this->novelRepository->unbanUser($novel, $userID);
+        $this->novelRepository->unbanUser($novelID, $userID);
 
         return response()->json([
             'message' => 'User unban successfully'
@@ -655,10 +665,24 @@ class NovelController extends Controller
             return response()->json('Novel not found', 404);
         }
 
-        $this->authorize('view', $novel);
-        
+        $user_id = Auth::guard('sanctum')->user()->id ?? null;
+
+        $isBanned = $user_id ? $novel->ban()->where('user_id', $user_id)->exists() : false;
+
+        $openLetter = $novel->open_letter == 'open' && $user_id && !$isBanned;
+
+        $message = ($openLetter === 'close')
+            ? 'The author has closed the letter writing feature for this novel.'
+            : ((!$user_id)
+                ? 'You must be logged in to write a letter.'
+                : ($isBanned
+                    ? 'You have been banned from writing a letter.'
+                    : '')
+            );
+
         return response()->json([
-            'open_letter' => $novel->open_letter,
+            'open_letter' => $openLetter,
+            'message' => $message,
         ], 200);
     }
 }

@@ -62,6 +62,11 @@ class NovelPolicy
         return false;
     }
 
+    public function writeLetter(User $user, Novel $novel): bool
+    {
+        return $novel->open_letter === 'open' && $novel->ban()->where('user_id', $user->id)->exists() === false;
+    }
+
     /**
      * Determine whether the user can permanently delete the model.
      */

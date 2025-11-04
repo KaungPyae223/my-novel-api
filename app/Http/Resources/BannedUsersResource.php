@@ -16,6 +16,7 @@ class BannedUsersResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'user_id' => $this->user_id,
             'name' => $this->user->full_name,
             'email' => $this->user->email,
             'profile_image' => $this->user->profile_image,

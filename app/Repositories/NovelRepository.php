@@ -242,10 +242,10 @@ class NovelRepository
     {
         $novel = $this->findNovel($id);
 
-        $checkBan = $novel->banUser()->where('user_id', $user_id)->first();
+        $checkBan = $novel->ban()->where('user_id', $user_id)->first();
 
         if (!$checkBan) {
-            $novel->banUser()->create(['user_id' => $user_id]);
+            $novel->ban()->create(['user_id' => $user_id]);
         }
     }
 
@@ -253,7 +253,7 @@ class NovelRepository
     {
         $novel = $this->findNovel($id);
 
-        $BanUser = $novel->banUser()->where('user_id', $user_id)->first();
+        $BanUser = $novel->ban()->where('user_id', $user_id)->first();
 
         if ($BanUser) {
             $BanUser->delete();

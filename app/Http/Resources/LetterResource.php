@@ -23,6 +23,7 @@ class LetterResource extends JsonResource
             'body' => $this->body,
             'reply' => $this->reply,
             'status' => $this->status,
+            'ban' => $this->novel->ban()->where('user_id', $this->user_id)->exists(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
