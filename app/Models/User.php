@@ -8,11 +8,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use MongoDB\Laravel\Eloquent\HybridRelations;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+    use HybridRelations;
 
     /**
      * The attributes that are mass assignable.
@@ -67,22 +69,22 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function novelHistories()
     {
-        return $this->morphedByMany(Novel::class, 'historyable','histories');
+        return $this->hasMany(History::class, 'user_id', 'id')->where('historyable_type', Novel::class);
     }
 
     public function chapterHistories()
     {
-        return $this->morphedByMany(Chapter::class, 'historyable','histories');
+        return $this->hasMany(History::class, 'user_id', 'id')->where('historyable_type', Chapter::class);
     }
 
     public function viewedNovels()
     {
-        return $this->morphedByMany(Novel::class, 'viewable', 'views');
+        return $this->hasMany(View::class, 'user_id', 'id')->where('viewable_type', Novel::class);
     }
 
     public function viewedChapters()
     {
-        return $this->morphedByMany(Chapter::class, 'viewable', 'views');
+        return $this->hasMany(View::class, 'user_id', 'id')->where('viewable_type', Chapter::class);
     }
 
     public function favorites()

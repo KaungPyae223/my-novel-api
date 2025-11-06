@@ -3,20 +3,24 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 
 class View extends Model
 {
     /** @use HasFactory<\Database\Factories\ViewFactory> */
     use HasFactory;
 
+    protected $connection = 'mongodb';
+    protected $collection = 'views';
+
     protected $fillable = [
         'user_id',
     ];
 
-    public function viewable()
+    public function getNovelAttribute()
     {
-        return $this->morphTo();
+        return Novel::find($this->viewable_id);
     }
+
 
 }

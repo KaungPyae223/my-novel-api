@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Love extends Model
 {
     /** @use HasFactory<\Database\Factories\LoveFactory> */
     use HasFactory;
+    
+    protected $connection = 'mongodb';
+    protected $collection = 'loves';
 
     protected $fillable = [
         'user_id',
@@ -19,8 +22,8 @@ class Love extends Model
         return $this->morphTo();
     }
 
-    public function user()
+    public function getUserAttribute()
     {
-        return $this->belongsTo(User::class);
+        return User::find($this->user_id);
     }
 }

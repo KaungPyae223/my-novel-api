@@ -272,7 +272,7 @@ class NovelController extends Controller
                 ->orderBy('created_at');
 
             $allChapters = $chapters->pluck('id')->toArray();
-            $readChapters = $chapters->whereHas('view', function ($query) use ($userId) {
+            $readChapters = $chapters->whereHas('histories', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
                 ->pluck('id')

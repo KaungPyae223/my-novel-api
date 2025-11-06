@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Letter extends Model
 {
-    /** @use HasFactory<\Database\Factories\LetterFactory> */
     use HasFactory;
     use SoftDeletes;
+
+    protected $connection = 'mongodb';
+    protected $collection = 'letters';
 
     protected $fillable = [
         'user_id',
@@ -20,13 +22,13 @@ class Letter extends Model
         'status',
     ];
 
-    public function user()
+    public function getUserAttribute()
     {
-        return $this->belongsTo(User::class);
+        return User::find($this->user_id);
     }
 
-    public function novel()
+    public function getNovelAttribute() 
     {
-        return $this->belongsTo(Novel::class);
+        return Novel::find($this->novel_id);
     }
 }

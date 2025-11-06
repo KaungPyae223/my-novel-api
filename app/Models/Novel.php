@@ -7,10 +7,12 @@ use App\Traits\NovelElasticSync;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use MongoDB\Laravel\Eloquent\HybridRelations;
 
 class Novel extends Model
 {
     /** @use HasFactory<\Database\Factories\NovelFactory> */
+    use HybridRelations;
     use HasFactory,SoftDeletes;
     use CreateLog;
     use NovelElasticSync;

@@ -115,7 +115,7 @@ class NovelRepository
             });
         }
 
-        $logs = $logs->with('user')->orderBy('created_at', 'desc')->paginate(10);
+        $logs = $logs->orderBy('created_at', 'desc')->paginate(10);
 
         return $logs;
     }
@@ -156,12 +156,8 @@ class NovelRepository
     {
         $novel = $this->findNovel($id);
 
-        $user = Auth::user();
-        if (!$user || !$user->save_history) {
-            return;
-        }
-
         $alreadyExists = $novel->history()->where('user_id', $user_id)->exists();
+       
         if ($alreadyExists) {
             return;
         }

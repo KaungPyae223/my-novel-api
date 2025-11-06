@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Log extends Model
 {
     /** @use HasFactory<\Database\Factories\LogFactory> */
     use HasFactory;
+    
+    protected $connection = 'mongodb';
+    protected $collection = 'logs';
 
     protected $fillable = [
         'title',
@@ -33,8 +36,8 @@ class Log extends Model
         return $this->morphTo();
     }
 
-    public function user()
+    public function getUserAttribute()
     {
-        return $this->belongsTo(User::class);
+        return User::find($this->user_id);
     }
 }

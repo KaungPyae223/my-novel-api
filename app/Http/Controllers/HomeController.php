@@ -19,22 +19,29 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        $history = $user->viewedNovels()
-            ->pluck('novels.id')
+        $views = $user->viewedNovels()->get()->unique("viewable_id"); // all history documents
+
+      
+        $viewedNovels = $views->map(function ($view) {
+            return $view->novel;
+        })->unique(); 
+
+      
+        $history = $viewedNovels->pluck('id')
             ->unique()
             ->toArray();
 
-        $favoriteGenres = $user->viewedNovels()
-            ->pluck('novels.genre_id')
+        $favoriteGenres = $viewedNovels->pluck('genre_id')
             ->unique()
             ->toArray();
 
-        $favoriteAuthors = $user->viewedNovels()
-            ->pluck('novels.user_id')
+        $favoriteAuthors = $viewedNovels->pluck('user_id')
             ->unique()
             ->toArray();
 
-        $favoriteNovels = $user->favorites->pluck('novel_id')->toArray();
+        $favoriteNovels = $viewedNovels->pluck('id')
+            ->unique()
+            ->toArray();
 
         $history = $history ?: [0];
         $favoriteGenres = $favoriteGenres ?: [0];
@@ -43,7 +50,6 @@ class HomeController extends Controller
 
         // Recommend unread novels
         $novels = Novel::query()
-            ->withCount('view')
             ->where('status', 'published')
             ->whereNull('deleted_at')
             ->whereHas('chapters', function ($query) {
@@ -57,7 +63,6 @@ class HomeController extends Controller
                 (CASE WHEN id IN (" . implode(',', $history) . ") THEN -1 ELSE 0 END) +
                 (CASE WHEN id IN (" . implode(',', $favoriteNovels) . ") THEN -2 ELSE 0 END) DESC
             ")
-            ->orderByDesc("view_count")
             ->paginate(10);
 
 
@@ -71,8 +76,9 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        $history = $user->viewedChapters()
-            ->pluck('chapters.id')
+        $views = $user->viewedChapters()->get()->unique("viewable_id"); // all history documents
+
+        $history = $views->pluck('viewable_id')
             ->unique()
             ->toArray();
 
@@ -106,12 +112,13 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        $history = $user->viewedNovels()
-            ->pluck('novels.id')
+        $views = $user->viewedNovels()->get()->unique("viewable_id"); // all history documents
+
+        
+        $history = $views->pluck('viewable_id')
             ->unique()
             ->toArray();
 
-        
         $favoriteNovels = $user->favorites->pluck('novel_id')->toArray();
 
        
