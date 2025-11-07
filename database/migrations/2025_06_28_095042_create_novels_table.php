@@ -22,7 +22,6 @@ return new class extends Migration
             $table->string('image_public_id')->nullable();
             $table->enum('status', config('base.status'))->default('draft');
             $table->enum('progress', config('base.progress'))->default('ongoing');
-            $table->integer('share_count')->default(0);
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('genre_id')->constrained('genres')->cascadeOnDelete();
             $table->enum('open_letter', ['open', 'close'])->default('open');

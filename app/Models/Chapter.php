@@ -56,6 +56,9 @@ class Chapter extends Model
         return $this->morphMany(Log::class, 'logable');
     }
 
-      
+    public function share()
+    {
+        return $this->morphMany(Share::class, 'shareable');
+    }
 
 }

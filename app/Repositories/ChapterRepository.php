@@ -86,8 +86,19 @@ class ChapterRepository
 
     public function share($id)
     {
+
+        $userId = Auth::guard('sanctum')->user()->id ?? request()->ip(); 
+
         $chapter = $this->findChapter($id);
-        $chapter->share_count++;
-        $chapter->save();
+
+        $alreadyExists = $chapter->share()->where('user_id', $userId)->exists();
+
+        if ($alreadyExists) {
+            return;
+        }
+
+        $chapter->share()->create([
+            'user_id' => $userId,
+        ]);
     }
 }

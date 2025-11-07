@@ -26,7 +26,7 @@ trait CreateLog
                 }
             }
 
-            unset($changes['created_at'], $changes['updated_at'], $changes['deleted_at'], $changes['share_count']);
+            unset($changes['created_at'], $changes['updated_at'], $changes['deleted_at']);
 
             if (!empty($changes) && !isset($changes['deleted_at'])) {
                 WriteLog::write($model, 'updated', $changes);

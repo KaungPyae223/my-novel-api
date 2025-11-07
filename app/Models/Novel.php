@@ -102,4 +102,9 @@ class Novel extends Model
     {
         return $this->morphMany(BanUser::class, 'banable');
     }
+
+    public function share()
+    {
+        return $this->morphMany(Share::class, 'shareable');
+    }
 }

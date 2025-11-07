@@ -29,7 +29,6 @@ class NovelFactory extends Factory
             'image_public_id' => null,
             'status' => "published",
             'progress' => $this->faker->randomElement(config('base.progress')),
-            'share_count' => $this->faker->numberBetween(0, 500),
             'user_id' => $this->faker->numberBetween(1, 30), 
             'genre_id' => $this->faker->numberBetween(1, 10), 
         ];

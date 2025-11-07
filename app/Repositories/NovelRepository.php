@@ -195,9 +195,20 @@ class NovelRepository
 
     public function share($id)
     {
+
+        $userId = Auth::guard('sanctum')->user()->id ?? request()->ip(); 
+
         $novel = $this->findNovel($id);
-        $novel->share_count++;
-        $novel->save();
+
+        $alreadyExists = $novel->share()->where('user_id', $userId)->exists();
+
+        if ($alreadyExists) {
+            return;
+        }
+
+        $novel->share()->create([
+            'user_id' => $userId,
+        ]);
     }
 
     public function getTrashedChapters($id)

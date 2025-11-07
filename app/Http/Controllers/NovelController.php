@@ -404,14 +404,7 @@ class NovelController extends Controller
             ], 404);
         }
 
-        $userId = Auth::guard('sanctum')->user()->id ?? request()->ip();
-        $key = "novel-share:{$userId}:{$id}";
-
-        if (RateLimiter::tooManyAttempts($key, 1)) {
-            return;
-        }
-
-        RateLimiter::hit($key, 60 * 60); // allow 5 attempts per 60 seconds
+       
         $this->novelRepository->share($id);
 
         return response()->json([
