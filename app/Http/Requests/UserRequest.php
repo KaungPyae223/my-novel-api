@@ -33,13 +33,13 @@ class UserRequest extends FormRequest
                 Rule::unique('users', 'username')->ignore(Auth::id()),
             ],
 
-            'about' => 'required|string',
-            'location' => 'string|max:255',
-            'phone' => 'string|max:255',
-            'facebook' => 'string|max:255',
-            'twitter' => 'string|max:255',
-            'instagram' => 'string|max:255',
-            'youtube' => 'string|max:255',
+            'about' => 'nullable|string',
+            'location' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:255',
+            'facebook' => 'nullable|string|max:255',
+            'twitter' => 'nullable|string|max:255',
+            'instagram' => 'nullable|string|max:255',
+            'youtube' => 'nullable|string|max:255',
         ];
     }
 }
