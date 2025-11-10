@@ -2,23 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\LogInEvent;
 use App\Http\Resources\UserResource;
 use App\Mail\VerificationMail;
 use App\Models\User;
+use App\Notifications\UserLoginNotification;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
 class AuthenticationController extends Controller
 {
-    public function register(Request $request) {
+    public function register(Request $request)
+    {
 
         $request->merge([
-            'username' => '@'.$request->username,
+            'username' => '@' . $request->username,
         ]);
 
         $request->validate([
@@ -55,7 +59,11 @@ class AuthenticationController extends Controller
         }
 
         $user = Auth::user();
+
         $token = $user->createToken('api-token')->plainTextToken;
+
+       
+        event(new LogInEvent($user));
 
         return response()->json(['token' => $token, 'user' => new UserResource($user)]);
     }
@@ -100,7 +108,6 @@ class AuthenticationController extends Controller
             event(new Verified($user));
         }
 
-        return redirect()->away(config('ai.app_url').'/verified-email');
+        return redirect()->away(config('ai.app_url') . '/verified-email');
     }
-
 }

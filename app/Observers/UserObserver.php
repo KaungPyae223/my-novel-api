@@ -1,19 +1,28 @@
 <?php
 
-namespace App\Traits;
+namespace App\Observers;
 
 use App\Http\Utils\WriteLog;
+use App\Models\User;
 
-trait CreateUserLog
+class UserObserver
 {
-    public static function bootCreateUserLog()
+    /**
+     * Handle the User "created" event.
+     */
+    public function created(User $user): void
     {
+        //
+    }
 
-        static::updated(function ($model) {
-
-            $changes = [];
-            foreach ($model->getChanges() as $attribute => $newValue) {
-                $original = $model->getOriginal($attribute);
+    /**
+     * Handle the User "updated" event.
+     */
+    public function updated(User $user): void
+    {
+         $changes = [];
+            foreach ($user->getChanges() as $attribute => $newValue) {
+                $original = $user->getOriginal($attribute);
                 if ($original !== $newValue) {
                     $changes[$attribute] = [
                         'original' => $original,
@@ -40,8 +49,31 @@ trait CreateUserLog
 
                 unset($changes['password'], $changes['email_verified_at'], $changes['profile_image_public_id'], $changes['cover_image_public_id']);
 
-                WriteLog::writeUserLog($title, $model, 'updated', $changes);
+                WriteLog::writeUserLog($title, $user, 'updated', $changes);
             }
-        });
+    }
+
+    /**
+     * Handle the User "deleted" event.
+     */
+    public function deleted(User $user): void
+    {
+        //
+    }
+
+    /**
+     * Handle the User "restored" event.
+     */
+    public function restored(User $user): void
+    {
+        //
+    }
+
+    /**
+     * Handle the User "force deleted" event.
+     */
+    public function forceDeleted(User $user): void
+    {
+        //
     }
 }

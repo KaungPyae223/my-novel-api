@@ -15,8 +15,6 @@ class WriteLog
 
         $parent = $model instanceof Novel ? $model : ($model->novel ? $model->novel : $model->postable);
 
-
-
         Log::create([
             'title' => $model->title ?? null,
             'logable_id' => $model->id,
@@ -24,7 +22,7 @@ class WriteLog
             'parentable_id' => $parent->id ?? null,
             'parentable_type' => $parent ? get_class($parent) : null,
             'ip_address' => request()->ip() ?? "system",
-            'user_agent' => request()->user_agent ?? "system",
+            'user_agent' => request()->userAgent() ?? "system",
             'user_id' => Auth::user()->id ?? null,
             'description' => json_encode($data, JSON_UNESCAPED_UNICODE),
             'action' => $action,

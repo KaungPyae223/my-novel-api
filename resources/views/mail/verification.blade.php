@@ -29,7 +29,7 @@
         </tr>
         <tr>
             <td style="background-color: #f4f4f4; text-align: center; padding: 15px; font-size: 12px; color: #999999;">
-                &copy; 2025 My Novel. All rights reserved.
+                &copy; {{ date('Y') }} My Novel. All rights reserved.
             </td>
         </tr>
     </table>
