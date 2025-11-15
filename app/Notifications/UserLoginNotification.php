@@ -6,6 +6,7 @@ use App\Mail\UserLogInMail;
 use App\Models\Noti;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class UserLoginNotification extends Notification implements ShouldQueue
@@ -32,7 +33,7 @@ class UserLoginNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database','broadcast'];
     }
 
     /**
@@ -40,13 +41,13 @@ class UserLoginNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): UserLogInMail
     {
-        return (new UserLogInMail($notifiable, $this->device_info, $this->ip_address))->to($notifiable->email);      
+        return (new UserLogInMail($notifiable, $this->device_info, $this->ip_address))->to($notifiable->email);
     }
 
     public function toDatabase(object $notifiable): array
     {
 
-        return([
+        return ([
             'user_id' => $notifiable->id,
             'message' => 'You account has been logged in from device ' . $this->device_info . ' with IP address ' . $this->ip_address . ' at ' . now()->format('Y-m-d H:i:s'),
             'type' => 'important',
@@ -55,9 +56,22 @@ class UserLoginNotification extends Notification implements ShouldQueue
             'action_url' => 'https://example.com/login',
             'title' => 'Login Notification',
         ]);
-
-       
     }
+
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage([
+            'user_id' => $notifiable->id,
+            'message' => 'Your account has been logged in from device ' . $this->device_info . ' with IP address ' . $this->ip_address . ' at ' . now()->format('Y-m-d H:i:s'),
+            'type' => 'important',
+            'read' => false,
+            'action' => 'It is not me',
+            'action_url' => 'https://example.com/login',
+            'title' => 'Login Notification',
+        ]);
+    }
+
+
 
     /**
      * Get the array representation of the notification.

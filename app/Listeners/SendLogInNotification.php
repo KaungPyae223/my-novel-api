@@ -5,7 +5,6 @@ namespace App\Listeners;
 use App\Events\LogInEvent;
 use App\Http\Utils\WriteLog;
 use App\Notifications\UserLoginNotification;
-use Illuminate\Support\Facades\Log;
 
 class SendLogInNotification 
 {
@@ -31,4 +30,6 @@ class SendLogInNotification
 
         $event->user->notify(new UserLoginNotification($event->device_info, $event->ip_address));
     }
+
+   
 }
