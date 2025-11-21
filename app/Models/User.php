@@ -10,13 +10,14 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use MongoDB\Laravel\Eloquent\HybridRelations;
-
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+    use HasPushSubscriptions;
     use HybridRelations;
 
     /**
@@ -95,8 +96,5 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Favorite::class, 'user_id', 'id');
     }
 
-    public function subscribe()
-    {
-        return $this->hasMany(Subscribe::class);
-    }
+   
 }

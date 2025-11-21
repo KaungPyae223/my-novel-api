@@ -152,15 +152,12 @@ class UserController extends Controller
 
         $user = Auth::user();
 
-        $subscription = $user->subscribe()->where('endpoint', $request->endpoint)->first();
+        $user->updatePushSubscription(
+            $request->endpoint,
+            $request->keys['p256dh'],
+            $request->keys['auth']
+        );
 
-        if (!$subscription) {
-            Auth::user()->subscribe()->create([
-                'endpoint' => $request->endpoint,
-                'p256dh' => $request->keys['p256dh'],
-                'auth' => $request->keys['auth'],
-            ]);
-        }
-
+        return response()->json(['success' => true]);
     }
 }

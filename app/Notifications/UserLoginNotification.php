@@ -3,14 +3,11 @@
 namespace App\Notifications;
 
 use App\Mail\UserLogInMail;
-use App\Models\Noti;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
-use Minishlink\WebPush\WebPush;
-use Minishlink\WebPush\Subscription;
-use App\Notifications\Channels\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
+use NotificationChannels\WebPush\WebPushChannel;
 
 
 class UserLoginNotification extends Notification implements ShouldQueue
@@ -62,38 +59,16 @@ class UserLoginNotification extends Notification implements ShouldQueue
         ]);
     }
 
- 
 
-    public function toWebPush($notifiable)
+
+    public function toWebPush($notifiable, $notification)
     {
-        $auth = [
-            'VAPID' => [
-                'subject' => 'mailto:admin@example.com',
-                'publicKey' => config('webpush.vapid.public_key'),
-                'privateKey' => config('webpush.vapid.private_key'),
-            ],
-        ];
-
-        $webPush = new WebPush($auth);
-
-        foreach ($notifiable->subscribe as $sub) {
-            $subscription = Subscription::create([
-                'endpoint' => $sub->endpoint,
-                'publicKey' => $sub->p256dh,   
-                'authToken' => $sub->auth,     
-                'contentEncoding' => 'aes128gcm',
+        return (new WebPushMessage)
+            ->title('Login Notification')
+            ->body("Your account was logged in from device {$this->device_info}")
+            ->data([
+                'url' => 'https://example.com/login',
             ]);
-
-            $payload = json_encode([
-                'title' => 'Login Notification',
-                'body' => 'Your account was logged in from device ' . $this->device_info,
-                'url' => config('app.url') . '/notifications',
-            ]);
-
-            $webPush->sendOneNotification($subscription, $payload);
-        }
-
-        return true;
     }
 
     /**
