@@ -7,6 +7,8 @@ use App\Http\Resources\ProfileResource;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use App\Http\Utils\ImageUtils;
+use App\Models\Log;
+use Illuminate\Support\Facades\Log as FacadesLog;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
@@ -14,14 +16,12 @@ class UserController extends Controller
 
     protected $userRepository;
 
-    public function __construct(UserRepository $userRepository) {
+    public function __construct(UserRepository $userRepository)
+    {
         $this->userRepository = $userRepository;
     }
 
-    public function show($id)
-    {
-
-    }
+    public function show($id) {}
 
     public function viewProfile()
     {
@@ -55,7 +55,7 @@ class UserController extends Controller
         }
 
         $request->merge([
-            'username' => '@'.$request->username,
+            'username' => '@' . $request->username,
         ]);
 
         $this->userRepository->updateUser($id, $request->all());
@@ -134,9 +134,33 @@ class UserController extends Controller
         ]);
     }
 
-    public function checkUser(){
+    public function checkUser()
+    {
         return response()->json([
             'message' => 'User checked successfully',
         ]);
+    }
+
+    public function saveSubscription(Request $request)
+    {
+
+        $request->validate([
+            'endpoint' => 'required',
+            'keys.p256dh' => 'required',
+            'keys.auth' => 'required',
+        ]);
+
+        $user = Auth::user();
+
+        $subscription = $user->subscribe()->where('endpoint', $request->endpoint)->first();
+
+        if (!$subscription) {
+            Auth::user()->subscribe()->create([
+                'endpoint' => $request->endpoint,
+                'p256dh' => $request->keys['p256dh'],
+                'auth' => $request->keys['auth'],
+            ]);
+        }
+
     }
 }

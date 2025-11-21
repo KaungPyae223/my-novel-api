@@ -94,4 +94,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Favorite::class, 'user_id', 'id');
     }
+
+    public function subscribe()
+    {
+        return $this->hasMany(Subscribe::class);
+    }
 }
