@@ -13,7 +13,7 @@ class NovelElastic
     public static function updateNovelElastic($id)
     {
 
-        $elastic = (new ElasticSetUp())->setUp();
+        $elastic = app('elasticsearch');
 
         $novel = Novel::find($id);
 
@@ -59,7 +59,7 @@ class NovelElastic
     public static function deleteNovelElastic($id)
     {
 
-        $elastic = (new ElasticSetUp())->setUp();
+        $elastic = app('elasticsearch');
 
         try {
             $elastic->delete([

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Utils\ElasticSetUp;
 use App\Repositories\QuerySuggestionRepository;
 use Illuminate\Http\Request;
 
@@ -14,7 +13,7 @@ class QuerySuggestionController extends Controller
 
     public function __construct(QuerySuggestionRepository $suggestionRepository)
     {
-        $this->elastic = (new ElasticSetUp())->setUp();
+        $this->elastic = app('elasticsearch');
         $this->suggestionRepository = $suggestionRepository;
     }
 

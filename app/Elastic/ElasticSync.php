@@ -2,7 +2,6 @@
 
 namespace App\Elastic;
 
-use App\Http\Utils\ElasticSetUp;
 use App\Models\Novel;
 use Illuminate\Support\Facades\Log;
 
@@ -12,7 +11,7 @@ class ElasticSync
 
     public function __construct()
     {
-        $this->elastic = (new ElasticSetUp())->setUp();
+        $this->elastic = app('elasticsearch');
     }
 
     public  function sync()

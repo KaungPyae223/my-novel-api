@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Utils\ElasticSetUp;
 use App\Repositories\LibraryRepository;
 
 class LibraryController extends Controller
@@ -16,7 +15,7 @@ class LibraryController extends Controller
     {
 
         $this->libraryRepository = $libraryRepository;
-        $this->elastic = (new ElasticSetUp())->setUp();
+        $this->elastic = app('elasticsearch');
     }
 
     public function Novels(Request $request)

@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\Http\Utils\ElasticSetUp;
 use App\Models\Novel;
 
 class QuerySuggestionRepository
@@ -12,7 +11,7 @@ class QuerySuggestionRepository
 
     public function __construct()
     {
-        $this->elastic = (new ElasticSetUp())->setUp();
+        $this->elastic = app('elasticsearch');
     }
 
     public function suggestNovelFromDB($q)

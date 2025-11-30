@@ -3,7 +3,6 @@
 namespace App\Repositories;
 
 use App\Http\Resources\NovelLibraryResource;
-use App\Http\Utils\ElasticSetUp;
 use App\Models\Novel;
 
 class LibraryRepository
@@ -13,7 +12,7 @@ class LibraryRepository
 
     public function __construct()
     {
-        $this->elastic = (new ElasticSetUp())->setUp();
+        $this->elastic = app('elasticsearch');
     }
 
     public function searchNovelFromDB($q, $genre, $progress, $limit)
