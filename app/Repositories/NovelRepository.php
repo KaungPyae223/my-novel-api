@@ -3,7 +3,6 @@
 namespace App\Repositories;
 
 use App\Http\Utils\WriteLog;
-use App\Jobs\DeleteImage;
 use App\Models\Chapter;
 use App\Models\Letter;
 use App\Models\Log;
@@ -72,12 +71,11 @@ class NovelRepository
         $novel = $this->findNovelWithTrash($id);
 
         if ($novel->trashed()) {
-            if ($novel->image_public_id) {
-                dispatch(new DeleteImage($novel->image_public_id));
+            if ($novel->hasMedia('cover_images')) {
+                $novel->getFirstMedia('cover_images')->delete();
             }
             return $novel->forceDelete();
         } else {
-
             WriteLog::write($novel, 'trashed', $novel->getAttributes());
             return $novel->delete();
         }

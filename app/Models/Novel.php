@@ -8,25 +8,26 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use MongoDB\Laravel\Eloquent\HybridRelations;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Novel extends Model
+class Novel extends Model implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\NovelFactory> */
     use HybridRelations;
     use HasFactory,SoftDeletes;
     use CreateLog;
     use NovelElasticSync;
+    use InteractsWithMedia;
 
     protected $fillable = [
         'title',
         'description',
         'synopsis',
         'tags',
-        'image',
         'status',
         'progress',
         'genre_id',
-        'image_public_id',
         'user_id',
         'unique_name',
         'open_letter',

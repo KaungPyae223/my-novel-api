@@ -20,7 +20,7 @@ class HomeNovelResource extends JsonResource
             'title' => $this->title,
             'description' => $this->description,
             'author' => $this->user->only(['id', 'full_name','profile_image']),
-            'image' => $this->image,
+            'image' => $this->getFirstMediaUrl('cover_images'),
             'genre' => $this->genre->genre,
             'progress' => $this->progress,
             'share_count' => ShortNumber::number_shorten($this->share->count()),

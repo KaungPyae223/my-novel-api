@@ -11,14 +11,16 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use MongoDB\Laravel\Eloquent\HybridRelations;
 use NotificationChannels\WebPush\HasPushSubscriptions;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements MustVerifyEmail, HasMedia
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
     use HasPushSubscriptions;
     use HybridRelations;
+    use InteractsWithMedia;
 
     /**
      * The attributes that are mass assignable.
@@ -30,10 +32,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'username',
         'password',
-        'profile_image',
-        'cover_image',
-        'profile_image_public_id',
-        'cover_image_public_id',
         'about',
         'location',
         'phone',

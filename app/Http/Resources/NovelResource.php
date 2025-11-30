@@ -26,7 +26,7 @@ class NovelResource extends JsonResource
             'already_loved' => $this->already_loved,
             'synopsis' => $this->synopsis,
             'tags' => $this->tags,
-            'image' => $this->image,
+            'image' => $this->getFirstMediaUrl('cover_images'),
             'views' => ShortNumber::number_shorten ($this->view->count()),
             'share_count' => ShortNumber::number_shorten($this->share->count()),
             'status' => $this->status,

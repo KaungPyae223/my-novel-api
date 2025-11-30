@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
-use App\Http\Utils\ImageUtils;
-use App\Jobs\DeleteImage;
 use App\Models\Post;
 use App\Repositories\PostRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -19,7 +17,8 @@ class PostController extends Controller
     protected $postRepository;
 
 
-    public function __construct(PostRepository $postRepository) {
+    public function __construct(PostRepository $postRepository)
+    {
         $this->postRepository = $postRepository;
     }
 
@@ -34,10 +33,7 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StorePostRequest $request)
-    {
-
-    }
+    public function store(StorePostRequest $request) {}
 
     /**
      * Display the specified resource.
@@ -65,15 +61,11 @@ class PostController extends Controller
 
 
         if ($request->hasFile('post_image')) {
-            if ($post->image_public_id) {
-                dispatch(new DeleteImage($post->image_public_id));
+            if ($post->getFirstMediaUrl('post_images')) {
+                $post->getFirstMediaUrl('post_images')->delete();
             }
             $uploadImage = $request->file('post_image');
-            $uploaded = ImageUtils::uploadImage($uploadImage);
-            $request->merge([
-                'image' => $uploaded["imageUrl"],
-                'image_public_id' => $uploaded["publicId"],
-            ]);
+            $uploaded = $post->addMedia($uploadImage)->toMediaCollection('post_images');
         }
 
         $post = $this->postRepository->update($id, $request->all());
@@ -102,9 +94,8 @@ class PostController extends Controller
 
         $this->authorize('delete', $post);
 
-
-        if ($post->image_public_id) {
-            dispatch(new DeleteImage($post->image_public_id));
+        if ($post->getFirstMediaUrl('post_images')) {
+            $post->getFirstMediaUrl('post_images')->delete();
         }
 
         $this->postRepository->deletePost($id);
@@ -133,7 +124,7 @@ class PostController extends Controller
         if ($already_loved) {
             $post->love()->where('user_id', $userID)->delete();
             $message = 'Post unloved successfully';
-        }else{
+        } else {
             $post->love()->create([
                 'user_id' => $userID,
             ]);
@@ -143,6 +134,5 @@ class PostController extends Controller
         return response()->json([
             'message' => $message,
         ], 200);
-
     }
 }

@@ -33,7 +33,7 @@ class PostResource extends JsonResource
             'id' => $this->id,
             'relative_id' => $this->postable_id,
             'content' => $this->content,
-            'image' => $this->image,
+            'image' => $this->getFirstMediaUrl('post_images'),
             'love_count' => ShortNumber::number_shorten($this->love->count()),
             'comment_count' => ShortNumber::number_shorten($this->comment->count()),
             'already_loved' => $already_loved,

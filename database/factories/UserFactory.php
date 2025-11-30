@@ -28,8 +28,6 @@ class UserFactory extends Factory
             'email' => $this->faker->unique()->safeEmail(),
             'username' => $this->faker->unique()->userName(),
             'password' => Hash::make('password123'), // default password
-            'profile_image' => null,
-            'cover_image' => null,
             'about' => $this->faker->sentence(12),
             'location' => $this->faker->city(),
             'phone' => $this->faker->phoneNumber(),
@@ -37,8 +35,6 @@ class UserFactory extends Factory
             'twitter' => 'https://twitter.com/' . Str::slug($this->faker->userName()),
             'instagram' => 'https://instagram.com/' . Str::slug($this->faker->userName()),
             'youtube' => 'https://youtube.com/@' . Str::slug($this->faker->userName()),
-            'profile_image_public_id' => null,
-            'cover_image_public_id' => null,
             'save_history' => true,
             'email_verified_at' => now(),
         ];

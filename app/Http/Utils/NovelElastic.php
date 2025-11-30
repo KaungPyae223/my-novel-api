@@ -37,7 +37,7 @@ class NovelElastic
                     'description'    => $novel->description,
                     'synopsis'       => $novel->synopsis,
                     'tags'           => $novel->tags,
-                    'image'          => $novel->image,
+                    'image'          => $novel->getFirstMediaUrl('cover_images'),
                     'genre'          => optional($novel->genre)->genre,
                     'progress'       => $novel->progress,
                     'status'         => $novel->status,

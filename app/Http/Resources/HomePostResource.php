@@ -19,7 +19,7 @@ class HomePostResource extends JsonResource
             'id' => $this->id,
             'author' => $this->user->only(['id', 'full_name','profile_image']),
             'content' => $this->content,
-            'image' => $this->image,
+            'image' => $this->getFirstMediaUrl('post_images'),
             'already_loved' => $this->love()->where('user_id', $request->user()->id)->exists(),
             'love_count' => ShortNumber::number_shorten($this->love->count()),
             'comment_count' => ShortNumber::number_shorten($this->comment->count()),

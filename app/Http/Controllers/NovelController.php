@@ -15,16 +15,13 @@ use App\Http\Resources\PostResource;
 use App\Http\Resources\ReviewResource;
 use App\Http\Resources\UserChapterResource;
 use App\Http\Utils\GenerateUniqueName;
-use App\Http\Utils\ImageUtils;
 use App\Http\Utils\ShortNumber;
-use App\Jobs\DeleteImage;
 use App\Models\Novel;
 use App\Models\User;
 use App\Repositories\NovelRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\RateLimiter;
 
 class NovelController extends Controller
 {
@@ -57,17 +54,16 @@ class NovelController extends Controller
         $count = Novel::where('unique_name', 'like', '%' . $unique_name . '%')->count();
         $unique_name = $unique_name . '-' . ($count + 1);
 
-        $uploadImage = $request->file('cover_image');
-        $uploaded = ImageUtils::uploadImage($uploadImage);
-
         $request->merge([
             'unique_name' => $unique_name,
             'user_id' => Auth::user()->id,
-            'image' => $uploaded["imageUrl"],
-            'image_public_id' => $uploaded["publicId"],
         ]);
 
         $novel = $this->novelRepository->create($request->all());
+
+        $novel
+        ->addMedia($request->file('cover_image'))
+        ->toMediaCollection('cover_images');
 
         return response()->json([
             'message' => 'Novel created successfully',
@@ -91,17 +87,12 @@ class NovelController extends Controller
 
         $this->authorize('update', $novel);
 
-        if ($novel->image_public_id) {
-            dispatch(new DeleteImage($novel->image_public_id));
+        if ($novel->hasMedia('cover_images')) {
+            $novel->getFirstMedia('cover_images')->delete();
         }
 
-        $uploadImage = $request->file('image');
-        $uploaded = ImageUtils::uploadImage($uploadImage);
-
-        $this->novelRepository->update($novel->id, [
-            'image' => $uploaded["imageUrl"],
-            'image_public_id' => $uploaded["publicId"],
-        ]);
+        $novel->addMedia($request->file('image'))
+        ->toMediaCollection('cover_images');
 
         return response()->json([
             'message' => 'Image uploaded successfully',
@@ -428,11 +419,8 @@ class NovelController extends Controller
         $uploadImage = $request->file('post_image');
 
         if ($uploadImage) {
-            $uploaded = ImageUtils::uploadImage($uploadImage);
-            $request->merge([
-                'image' => $uploaded["imageUrl"],
-                'image_public_id' => $uploaded["publicId"],
-            ]);
+            $novel->addMedia($uploadImage)
+            ->toMediaCollection('post_images');
         }
 
         $request->merge([

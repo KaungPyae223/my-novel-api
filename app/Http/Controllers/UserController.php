@@ -6,9 +6,6 @@ use App\Http\Requests\UserRequest;
 use App\Http\Resources\ProfileResource;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
-use App\Http\Utils\ImageUtils;
-use App\Models\Log;
-use Illuminate\Support\Facades\Log as FacadesLog;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
@@ -80,19 +77,14 @@ class UserController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-        if ($user->cover_image_public_id) {
-            ImageUtils::deleteImage($user->cover_image_public_id);
+        if ($user->hasMedia('cover_image')) {
+            $user->getFirstMediaUrl('cover_image')->delete();
         }
 
         $uploadImage = $request->file('image');
 
-        $uploaded = ImageUtils::uploadImage($uploadImage);
+        $user->addMedia($uploadImage)->toMediaCollection('cover_image');
 
-
-        $this->userRepository->updateUser($user->id, [
-            'cover_image' => $uploaded["imageUrl"],
-            'cover_image_public_id' => $uploaded["publicId"],
-        ]);
 
         return response()->json([
             'message' => 'Cover image uploaded successfully',
@@ -115,18 +107,17 @@ class UserController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
-        if ($user->profile_image_public_id) {
-            ImageUtils::deleteImage($user->profile_image_public_id);
+        if ($user->hasMedia('profile_image')) {
+            $user->getFirstMediaUrl('profile_image')->delete();
         }
 
         $uploadImage = $request->file('image');
 
-        $uploaded = ImageUtils::uploadImage($uploadImage);
+        $user->addMedia($uploadImage)->toMediaCollection('profile_image');
 
 
-        $this->userRepository->updateUser($user->id, [
-            'profile_image' => $uploaded['imageUrl'],
-            'profile_image_public_id' => $uploaded['publicId'],
+        return response()->json([
+            'message' => 'Profile image uploaded successfully',
         ]);
 
         return response()->json([

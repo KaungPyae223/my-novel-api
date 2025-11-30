@@ -17,8 +17,6 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('username')->unique();
             $table->string('password');
-            $table->text('profile_image')->nullable();
-            $table->text('cover_image')->nullable();
             $table->text('about')->nullable();
             $table->text('location')->nullable();
             $table->string('phone')->nullable();
@@ -26,8 +24,6 @@ return new class extends Migration
             $table->text('twitter')->nullable();
             $table->text('instagram')->nullable();
             $table->text('youtube')->nullable();
-            $table->string('profile_image_public_id')->nullable();
-            $table->string('cover_image_public_id')->nullable();
             $table->boolean('save_history')->default(true);
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();

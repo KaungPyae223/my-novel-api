@@ -57,12 +57,12 @@ class HomeController extends Controller
                     ->whereNull('deleted_at');
             })
             ->groupBy('novels.id')
-            ->orderByRaw("
-                (CASE WHEN genre_id IN (" . implode(',', $favoriteGenres) . ") THEN 2 ELSE 0 END) +
-                (CASE WHEN user_id IN (" . implode(',', $favoriteAuthors) . ") THEN 2 ELSE 0 END) +
-                (CASE WHEN id IN (" . implode(',', $history) . ") THEN -1 ELSE 0 END) +
-                (CASE WHEN id IN (" . implode(',', $favoriteNovels) . ") THEN -2 ELSE 0 END) DESC
-            ")
+            // ->orderByRaw("
+            //     (CASE WHEN genre_id IN (" . implode(',', $favoriteGenres) . ") THEN 2 ELSE 0 END) +
+            //     (CASE WHEN user_id IN (" . implode(',', $favoriteAuthors) . ") THEN 2 ELSE 0 END) +
+            //     (CASE WHEN id IN (" . implode(',', $history) . ") THEN -1 ELSE 0 END) +
+            //     (CASE WHEN id IN (" . implode(',', $favoriteNovels) . ") THEN -2 ELSE 0 END) DESC
+            // ")
             ->paginate(10);
 
 

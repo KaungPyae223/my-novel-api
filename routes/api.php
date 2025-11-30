@@ -104,6 +104,7 @@ Route::prefix("v1")->group(function () {
         Route::controller(PostController::class)->group(function () {
             Route::post('posts/{id}', 'update');
             Route::post('posts/loved/{id}', 'postLove');
+            Route::delete('posts/{id}', 'destroy');
         });
 
         Route::controller(HomeController::class)->prefix('home')->group(function () {
