@@ -5,10 +5,8 @@ namespace App\Repositories;
 use App\Http\Utils\WriteLog;
 use App\Models\Chapter;
 use App\Models\Letter;
-use App\Models\Log;
 use App\Models\Novel;
 use App\Models\Post;
-use Illuminate\Support\Facades\Auth;
 
 class NovelRepository
 {
@@ -46,7 +44,6 @@ class NovelRepository
 
         return $query->get();
     }
-
 
 
     public function all()
@@ -118,6 +115,37 @@ class NovelRepository
         return $logs;
     }
 
+    public function getNovelChapters($id,$request)
+    {
+
+        $novel = $this->findNovel($id);
+        $q = $request->input('q');
+        $filter = $request->input('filter');
+        $sort = $request->input('sort', 'newest');
+
+       
+        $chapters = $novel->chapters();
+
+        if ($q) {
+            $chapters->where('title', 'like', '%' . $q . '%');
+        }
+
+        if ($filter && $filter != 'all') {
+            $chapters->where('status', $filter);
+        }
+
+        match ($sort) {
+            'oldest' => $chapters->orderBy('created_at'),
+            'az'     => $chapters->orderBy('title'),
+            'za'     => $chapters->orderByDesc('title'),
+            default  => $chapters->orderByDesc('created_at'), 
+        };
+
+        $chapters = $chapters->paginate(15);
+
+        return $chapters;
+    }
+
     public function createNovelPost($id, $data)
     {
         $novel = $this->findNovel($id);
@@ -137,18 +165,7 @@ class NovelRepository
         return $novel->review()->orderBy('created_at', 'desc')->paginate(3);
     }
 
-    public function addView($id, $user_id)
-    {
-        $novel = $this->findNovelWithTrash($id);
-
-        $last_view = $novel->view()->where('user_id', $user_id)->latest()->first();
-
-        if (!$last_view || $last_view->created_at->diffInMinutes(now()) >= 5) {
-            $novel->view()->create([
-                'user_id' => $user_id,
-            ]);
-        }
-    }
+  
 
     public function addHistory($id, $user_id)
     {
@@ -163,51 +180,7 @@ class NovelRepository
         $novel->history()->create(['user_id' => $user_id]);
     }
 
-    public function addLove($id)
-    {
-        $novel = $this->findNovel($id);
-        $novel->love()->create([
-            'user_id' => Auth::user()->id,
-        ]);
-    }
-
-    public function removeLove($id)
-    {
-        $novel = $this->findNovel($id);
-        $novel->love()->where('user_id', Auth::user()->id)->delete();
-    }
-
-    public function addFavorite($id)
-    {
-        $novel = $this->findNovel($id);
-        $novel->favorite()->create([
-            'user_id' => Auth::user()->id,
-        ]);
-    }
-
-    public function removeFavorite($id)
-    {
-        $novel = $this->findNovel($id);
-        $novel->favorite()->where('user_id', Auth::user()->id)->delete();
-    }
-
-    public function share($id)
-    {
-
-        $userId = Auth::guard('sanctum')->user()->id ?? request()->ip(); 
-
-        $novel = $this->findNovel($id);
-
-        $alreadyExists = $novel->share()->where('user_id', $userId)->exists();
-
-        if ($alreadyExists) {
-            return;
-        }
-
-        $novel->share()->create([
-            'user_id' => $userId,
-        ]);
-    }
+  
 
     public function getTrashedChapters($id)
     {
@@ -243,28 +216,7 @@ class NovelRepository
         return $novel->letter()->withTrashed()->where('user_id', $user_id)->orderBy('created_at', 'desc')->paginate(10);
     }
 
-    public function banUser($id, $user_id)
-    {
-        $novel = $this->findNovel($id);
-
-        $checkBan = $novel->ban()->where('user_id', $user_id)->first();
-
-        if (!$checkBan) {
-            $novel->ban()->create(['user_id' => $user_id]);
-        }
-    }
-
-    public function unbanUser($id, $user_id)
-    {
-        $novel = $this->findNovel($id);
-
-        $BanUser = $novel->ban()->where('user_id', $user_id)->first();
-
-        if ($BanUser) {
-            $BanUser->delete();
-        }
-    }
-
+    
     public function getBannedUsers($id, $q)
     {
 
@@ -287,21 +239,6 @@ class NovelRepository
     {
         $novel = $this->findNovel($id);
         return $novel->ban()->count();
-    }
-
-    public function toggleFanLetter($id)
-    {
-        
-        $novel = $this->findNovel($id);
-
-        $openLetter = $novel->open_letter;
-
-        $novel->update([
-            'open_letter' => $openLetter == 'open' ? 'close' : 'open',
-        ]);
-
-        return $novel->open_letter;
-
     }
 
 }

@@ -17,11 +17,11 @@ use App\Http\Resources\UserChapterResource;
 use App\Http\Utils\GenerateUniqueName;
 use App\Http\Utils\ShortNumber;
 use App\Models\Novel;
-use App\Models\User;
 use App\Repositories\NovelRepository;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\NovelServices;
 
 class NovelController extends Controller
 {
@@ -32,10 +32,12 @@ class NovelController extends Controller
      */
 
     protected $novelRepository;
+    protected $novelServices;
 
-    public function __construct(NovelRepository $novelRepository)
+    public function __construct(NovelRepository $novelRepository,NovelServices $novelServices)
     {
         $this->novelRepository = $novelRepository;
+        $this->novelServices = $novelServices;
     }
 
     public function index()
@@ -127,7 +129,7 @@ class NovelController extends Controller
             ], 404);
         }
 
-        $user_id = Auth::guard('sanctum')->check() ? Auth::guard('sanctum')->user()->id : null;
+        $user_id = $this->novelServices->checkUserID();
 
         if ($novel->status != 'published' && !$user_id && $novel->user_id != $user_id) {
             return response()->json([
@@ -136,8 +138,8 @@ class NovelController extends Controller
         }
 
         if ($user_id) {
-            $this->novelRepository->addHistory($id, $user_id);
-            $this->novelRepository->addView($id, $user_id);
+            $this->novelServices->addHistory($novel,$user_id);
+            $this->novelServices->addView($novel,$user_id);
         }
 
         $already_loved = $user_id ? $novel->love()->where('user_id', $user_id)->exists() : false;
@@ -189,10 +191,7 @@ class NovelController extends Controller
     public function getNovelChapters($id, Request $request)
     {
         $novel = $this->novelRepository->findNovel($id);
-        $q = $request->input('q');
-        $filter = $request->input('filter');
-        $sort = $request->input('sort', 'newest');
-
+        
         if (!$novel) {
             return response()->json([
                 'message' => 'Novel not found',
@@ -200,32 +199,9 @@ class NovelController extends Controller
         }
 
         $this->authorize('view', $novel);
-        $chapters = $novel->chapters();
+      
+        $chapters = $this->novelRepository->getNovelChapters($id,$request);
 
-        if ($q) {
-            $chapters->where('title', 'like', '%' . $q . '%');
-        }
-
-        if ($filter && $filter != 'all') {
-            $chapters->where('status', $filter);
-        }
-
-        switch ($sort) {
-            case 'newest':
-                $chapters->orderByDesc('created_at');
-                break;
-            case 'oldest':
-                $chapters->orderBy('created_at');
-                break;
-            case 'az':
-                $chapters->orderBy('title');
-                break;
-            case 'za':
-                $chapters->orderByDesc('title');
-                break;
-        }
-
-        $chapters = $chapters->paginate(15);
         return NovelChapterResource::collection($chapters);
     }
 
@@ -255,41 +231,11 @@ class NovelController extends Controller
             ], 404);
         }
 
-        if (Auth::guard('sanctum')->check()) {
-            $userId = Auth::guard('sanctum')->user()->id;
-
-            $chapters = $novel->chapters()
-                ->where('status', 'published')
-                ->orderBy('created_at');
-
-            $allChapters = $chapters->pluck('id')->toArray();
-            $readChapters = $chapters->whereHas('histories', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })
-                ->pluck('id')
-                ->toArray();
-
-            $firstUnreadChapter = null;
-            $firstUnreadChapterIndex = null;
-            foreach ($allChapters as $index => $chapterId) {
-                if (!in_array($chapterId, $readChapters)) {
-                    $firstUnreadChapter = $chapterId;
-                    $firstUnreadChapterIndex = $index;
-                    break;
-                }
-            }
-
-            $page = $firstUnreadChapterIndex ? floor($firstUnreadChapterIndex / 15) + 1 : 1;
-
-            return response()->json([
-                'last_read_chapter' => $firstUnreadChapter,
-                'last_read_page' => $page
-            ], 200);
-        }
+        $lastReadChapter = $this->novelServices->getUserLastReadChapter($novel);
 
         return response()->json([
-            'last_read_chapter' => null,
-            'last_read_page' => 1
+            'last_read_chapter' => $lastReadChapter['last_read_chapter'],
+            'last_read_page' => $lastReadChapter['last_read_page']
         ], 200);
     }
 
@@ -370,15 +316,7 @@ class NovelController extends Controller
             ], 404);
         }
 
-        $already_favorited = $novel->favorite()->where('user_id', Auth::user()->id)->exists();
-
-        if ($already_favorited) {
-            $this->novelRepository->removeFavorite($id);
-            $message = 'Novel unfavorited successfully';
-        } else {
-            $this->novelRepository->addFavorite($id);
-            $message = 'Novel favorited successfully';
-        }
+       $message = $this->novelServices->toggleFavorite($novel);
 
         return response()->json([
             'message' => $message,
@@ -396,7 +334,7 @@ class NovelController extends Controller
         }
 
        
-        $this->novelRepository->share($id);
+        $this->novelServices->share($id);
 
         return response()->json([
             'message' => 'Novel shared successfully',
@@ -460,16 +398,7 @@ class NovelController extends Controller
             ], 404);
         }
 
-        $userID = Auth::user()->id;
-        $already_loved = $novel->love()->where('user_id', $userID)->exists();
-
-        if ($already_loved) {
-            $this->novelRepository->removeLove($id);
-            $message = 'Novel unloved successfully';
-        } else {
-            $this->novelRepository->addLove($id);
-            $message = 'Novel loved successfully';
-        }
+        $message = $this->novelServices->toggleLove($novel);
 
         return response()->json([
             'message' => $message,
@@ -567,14 +496,13 @@ class NovelController extends Controller
             return response()->json('Novel not found', 404);
         }
       
-        $user = User::find($userID);
-        if (!$user) {
+        if (!$this->novelServices->checkUser($userID)) {
             return response()->json('User not found', 404);
         }
 
         $this->authorize('view', $novel);
 
-        $this->novelRepository->banUser($novelID, $userID);
+        $this->novelServices->banUser($novel, $userID);
 
         return response()->json([
             'message' => 'User banned successfully'
@@ -589,13 +517,12 @@ class NovelController extends Controller
             return response()->json('Novel not found', 404);
         }
 
-        $user = User::find($userID);
-        if (!$user) {
+        if (!$this->novelServices->checkUserID($userID)) {
             return response()->json('User not found', 404);
         }
 
         $this->authorize('view', $novel);
-        $this->novelRepository->unbanUser($novelID, $userID);
+        $this->novelServices->unbanUser($novel, $userID);
 
         return response()->json([
             'message' => 'User unban successfully'
@@ -631,7 +558,7 @@ class NovelController extends Controller
 
         $this->authorize('view', $novel);
 
-        $value = $this->novelRepository->toggleFanLetter($id);
+        $value = $this->novelServices->toggleFanLetter($novel);
 
         return response()->json([
             'message' => "Fan letter $value successfully"
@@ -646,24 +573,11 @@ class NovelController extends Controller
             return response()->json('Novel not found', 404);
         }
 
-        $user_id = Auth::guard('sanctum')->user()->id ?? null;
-
-        $isBanned = $user_id ? $novel->ban()->where('user_id', $user_id)->exists() : false;
-
-        $openLetter = $novel->open_letter == 'open' && $user_id && !$isBanned;
-
-        $message = ($openLetter === 'close')
-            ? 'The author has closed the letter writing feature for this novel.'
-            : ((!$user_id)
-                ? 'You must be logged in to write a letter.'
-                : ($isBanned
-                    ? 'You have been banned from writing a letter.'
-                    : '')
-            );
+       $message = $this->novelServices->getFanLetterStatus($novel);
 
         return response()->json([
-            'open_letter' => $openLetter,
-            'message' => $message,
+            'open_letter' => $message['open_letter'],
+            'message' => $message['message'],
         ], 200);
     }
 }

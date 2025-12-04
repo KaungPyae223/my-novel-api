@@ -46,6 +46,7 @@ Route::prefix("v1")->group(function () {
             Route::post('/profile/upload-cover-image', 'uploadCoverImage');
             Route::post('/profile/upload-profile-image', 'uploadProfileImage');
             Route::get('/check-user', 'checkUser');
+            Route::get('/check-mail-verified', 'checkVerification');
             Route::post('/save-subscription', 'saveSubscription');
         });
 

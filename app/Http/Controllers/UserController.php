@@ -127,9 +127,21 @@ class UserController extends Controller
 
     public function checkUser()
     {
+
         return response()->json([
             'message' => 'User checked successfully',
         ]);
+    }
+
+    public function checkVerification()
+    {
+
+        
+        $verified_at = Auth::user()->email_verified_at;
+
+        return response()->json([
+            'verfified_at' => $verified_at,
+        ], 200);
     }
 
     public function saveSubscription(Request $request)
