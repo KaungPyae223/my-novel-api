@@ -65,10 +65,7 @@ class ReviewController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdatereviewRequest $request, review $review)
-    {
-        //
-    }
+    
 
     /**
      * Remove the specified resource from storage.

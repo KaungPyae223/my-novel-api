@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Repositories;
+namespace App\Services;
 
 use App\Http\Resources\NovelLibraryResource;
 use App\Models\Novel;
 
-class LibraryRepository
+class LibraryServices
 {
-
     protected $elastic;
 
     public function __construct()
@@ -56,17 +55,16 @@ class LibraryRepository
         $must = [];
         $filter = [];
         $sort = [];
-        
 
         if ($q) {
 
             $option = [];
 
 
-            if(count(array_filter(explode(" ", $q))) == 1){
-                $option['type'] = 'phrase_prefix';  
+            if (count(array_filter(explode(" ", $q))) == 1) {
+                $option['type'] = 'phrase_prefix';
                 $option['operator'] = 'or';
-            }else{
+            } else {
                 $option['type'] = 'best_fields';
                 $option['operator'] = 'and';
                 $option['fuzziness'] = 'AUTO';
@@ -79,9 +77,6 @@ class LibraryRepository
                     ...$option
                 ],
             ];
-
-            
-            
         } else {
             $sort = [
                 'created_at' => ['order' => 'desc'],
@@ -111,15 +106,15 @@ class LibraryRepository
                 ],
                 'size' => $limit,
                 'from' => ($page - 1) * $limit,
-                'sort' => $sort, 
+                'sort' => $sort,
             ],
         ]);
 
-       
-        return $this->formatNovelData($searchNovels,$limit,$page);
+
+        return $this->formatNovelData($searchNovels, $limit, $page);
     }
 
-    public function formatNovelData($searchNovels,$limit,$page)
+    public function formatNovelData($searchNovels, $limit, $page)
     {
         $hits = $searchNovels->hits->hits;
 
@@ -149,6 +144,5 @@ class LibraryRepository
                 'current_page' => (int)$page,
             ],
         ]);
-
     }
 }

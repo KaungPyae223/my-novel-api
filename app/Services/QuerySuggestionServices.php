@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Repositories;
+namespace App\Services;
 
 use App\Models\Novel;
+use App\Repositories\QuerySuggestionRepository;
 
-class QuerySuggestionRepository
+class QuerySuggestionServices
 {
-
+    
     protected $elastic;
 
     public function __construct()
@@ -45,7 +46,6 @@ class QuerySuggestionRepository
     {
 
        
-
         $option = [];
 
         if (count(array_filter(explode(" ", $q))) == 1) {

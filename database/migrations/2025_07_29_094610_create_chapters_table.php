@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('novel_id')->constrained('novels')->cascadeOnDelete();
             $table->longText('content');
             $table->text('summary')->nullable();
-             $table->timestamp('scheduled_date')->nullable();
+            $table->timestamp('scheduled_date')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

@@ -20,6 +20,13 @@ class UserController extends Controller
 
     public function show($id) {}
 
+    public function notFound()
+    {
+        return response()->json([
+            'message' => 'User not found',
+        ], 404);
+    }
+
     public function viewProfile()
     {
         $id = Auth::user()->id;
@@ -27,9 +34,7 @@ class UserController extends Controller
         $user = $this->userRepository->findUser($id);
 
         if (!$user) {
-            return response()->json([
-                'message' => 'User not found',
-            ], 404);
+            return $this->notFound();
         }
 
         return response()->json([
@@ -46,9 +51,7 @@ class UserController extends Controller
 
 
         if (!$user) {
-            return response()->json([
-                'message' => 'User not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $request->merge([
@@ -68,9 +71,7 @@ class UserController extends Controller
         $user = $this->userRepository->findUser(Auth::user()->id);
 
         if (!$user) {
-            return response()->json([
-                'message' => 'User not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $request->validate([
@@ -98,9 +99,7 @@ class UserController extends Controller
         $user = $this->userRepository->findUser(Auth::user()->id);
 
         if (!$user) {
-            return response()->json([
-                'message' => 'User not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $request->validate([

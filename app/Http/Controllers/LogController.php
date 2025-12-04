@@ -35,10 +35,7 @@ class LogController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateLogRequest $request, Log $log)
-    {
-        //
-    }
+    
 
     /**
      * Remove the specified resource from storage.

@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\QuerySuggestionRepository;
+use App\Services\QuerySuggestionServices;
 use Illuminate\Http\Request;
 
 class QuerySuggestionController extends Controller
 {
 
     protected $elastic;
-    protected $suggestionRepository;
+    protected $suggestionServices;
 
-    public function __construct(QuerySuggestionRepository $suggestionRepository)
+    public function __construct(QuerySuggestionServices $suggestionServices)
     {
         $this->elastic = app('elasticsearch');
-        $this->suggestionRepository = $suggestionRepository;
+        $this->suggestionServices = $suggestionServices;
     }
 
     public function index()
@@ -32,9 +32,9 @@ class QuerySuggestionController extends Controller
 
 
         if (!$this->elastic){
-            return $this->suggestionRepository->suggestNovelFromDB($q);
+            return $this->suggestionServices->suggestNovelFromDB($q);
         }else{
-            return $this->suggestionRepository->suggestNovelFromElastic($q);
+            return $this->suggestionServices->suggestNovelFromElastic($q);
         }
 
        

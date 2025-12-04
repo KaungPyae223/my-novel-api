@@ -18,14 +18,19 @@ class LetterController extends Controller
         $this->letterRepository = $letterRepository;
     }
 
+    public function notFound()
+    {
+        return response()->json([
+            'message' => 'Letter not found',
+        ], 404);
+    }
+
     public function replyLetter($id, ReplyLetterRequest $request)
     {
         $letter = $this->letterRepository->findLetter($id);
 
         if (!$letter) {
-            return response()->json([
-                'message' => 'Letter not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('replyLetter', $letter);
@@ -43,9 +48,7 @@ class LetterController extends Controller
         $letter = $this->letterRepository->findLetter($id);
 
         if (!$letter) {
-            return response()->json([
-                'message' => 'Letter not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('replyLetter', $letter);
@@ -63,9 +66,7 @@ class LetterController extends Controller
         $letter = $this->letterRepository->findLetter($id);
 
         if (!$letter) {
-            return response()->json([
-                'message' => 'Letter not found',
-            ], 404);
+           return $this->notFound();
         }
 
         $this->authorize('deleteLetter', $letter);

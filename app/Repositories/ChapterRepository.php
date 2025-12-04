@@ -15,8 +15,6 @@ class ChapterRepository
         $this->chapter = $chapter;
     }
 
-
-
     public function findChapter($id) {
         return $this->chapter->find($id);
     }
@@ -29,33 +27,6 @@ class ChapterRepository
         return $this->chapter->create($data);
     }
 
-    public function addHistory($id, $user_id)
-    {
-        $chapter = $this->findChapter($id);
-
-        $alreadyExists = $chapter->history()->where('user_id', $user_id)->exists();
-       
-        if ($alreadyExists) {
-            return;
-        }
-
-        $chapter->history()->create(['user_id' => $user_id]);
-    }
-
-
-
-    public function addView($id,$user_id) {
-
-        $chapter = $this->findChapter($id);
-
-        $last_view = $chapter->view()->where('user_id', $user_id)->latest()->first() ;
-
-        if(!$last_view || $last_view->created_at->diffInMinutes(now()) >= 5){
-            $chapter->view()->create([
-                'user_id' => $user_id,
-            ]);
-        }
-    }
     public function updateChapter($id, $data) {
 
         $chapter = $this->findChapter($id);
@@ -84,21 +55,5 @@ class ChapterRepository
         }
     }
 
-    public function share($id)
-    {
-
-        $userId = Auth::guard('sanctum')->user()->id ?? request()->ip(); 
-
-        $chapter = $this->findChapter($id);
-
-        $alreadyExists = $chapter->share()->where('user_id', $userId)->exists();
-
-        if ($alreadyExists) {
-            return;
-        }
-
-        $chapter->share()->create([
-            'user_id' => $userId,
-        ]);
-    }
+    
 }

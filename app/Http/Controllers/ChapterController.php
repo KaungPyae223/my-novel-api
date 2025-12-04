@@ -10,6 +10,7 @@ use App\Jobs\GenerateSummary;
 use App\Models\Chapter;
 use App\Repositories\ChapterRepository;
 use App\Repositories\NovelRepository;
+use App\Services\ChapterServices;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,16 +28,25 @@ class ChapterController extends Controller
 
     protected $NovelRepository;
     protected $ChapterRepository;
+    protected $chapterServices;
 
-    public function __construct(NovelRepository $NovelRepository, ChapterRepository $ChapterRepository)
+    public function __construct(NovelRepository $NovelRepository, ChapterServices $chapterServices, ChapterRepository $ChapterRepository)
     {
         $this->NovelRepository = $NovelRepository;
         $this->ChapterRepository = $ChapterRepository;
+        $this->chapterServices = $chapterServices;
     }
 
     public function index()
     {
         return Chapter::all();
+    }
+
+    public function notFound()
+    {
+        return response()->json([
+            'message' => 'Chapter not found',
+        ], 404);
     }
 
     public function generateSuggestion($id)
@@ -58,68 +68,9 @@ class ChapterController extends Controller
 
         $response = Cache::remember($cacheKey, now()->addHours(12), function () use ($novel, $last_chapter) {
 
-            $apiKey = config('ai.api_key');
+            $content = $this->chapterServices->generateSuggestion($novel, $last_chapter);
 
-            $response = Http::withOptions([
-                'proxy' => ''
-            ])->withHeaders([
-                'Authorization' => 'Bearer ' . $apiKey,
-                'Content-Type' => 'application/json',
-            ])->post('https://openrouter.ai/api/v1/chat/completions', [
-                'model' => config('ai.main_model'),
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => "You are a professional writing assistant helping fiction writers improve their chapters.
-
-                            I also provide you a previous chapter content and novel synopsis to help you generate a better suggestion.
-
-                            Respond only in valid JSON format with the following structure:
-                            {
-                            \"chapter_direction\": \"Your suggestion here\",
-                            \"character_development\": \"Your suggestion here\",
-                            \"plot_enhancement\": \"Your suggestion here\",
-                            \"writing_tips\": \"Your suggestion here\"
-                            }
-                            Each field should contain one helpful, concise suggestion. Do not include any extra commentary outside the JSON.
-                            In the content please separate me with // if the suggestion is more than one and you can give me more than one suggestion in each field.
-
-                            ### Instructions:
-
-                            1.  **Analyze the Provided Content:** Carefully read the **novel synopsis** to understand the overarching story, themes, and character arcs. Then, read the **previous chapter's content** to grasp the current plot point, character states, and established tone.
-                            2.  **Generate Targeted Suggestions:**
-                                * **chapter_direction:** Propose how the current chapter can effectively build on the previous one. Suggest ways to control pacing, build tension, or guide the narrative toward a key event.
-                                * **character_development:** Offer ideas for deepening the characters. This could include exploring their internal conflicts, showing their growth or regression, or revealing new aspects of their personality through actions or dialogue.
-                                * **plot_enhancement:** Identify opportunities to strengthen the plot. Suggest ways to raise the stakes, introduce new conflicts, foreshadow future events, or resolve a minor plot thread.
-                                * **writing_tips:** Provide actionable advice on writing craft. Focus on improving descriptive language, strengthening dialogue, varying sentence structure, or enhancing the sensory experience for the reader.
-
-                            3.  **Format the Response:** Adhere strictly to the JSON structure provided above. Ensure all suggestions are within quotation marks and that multiple suggestions within a field are separated by `//`.
-
-                            Important:
-                                - Return ONLY the JSON structure — no markdown, no explanations, no commentary.
-                                - Do not include ```json or ``` wrappers.
-                                - If the response is not valid JSON, you will fail this task.
-
-                            "
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => "Here's a summary of novel: " . $novel->synopsis . "\n\n Here's the content of last chapter: " . ($last_chapter->content ?? null) . "\n\n"
-                    ]
-                ],
-            ]);
-
-
-            $content = $response['choices'][0]['message']['content'] ?? null;
-
-            if($content){
-                $content = str_replace(['<｜begin▁of▁sentence｜>', '<｜end▁of▁sentence｜>'], '', $content);
-
-                $decoded = json_decode($content, true);
-
-                return $decoded;
-            }
-
+            return $this->chapterServices->formatContent($content);
         });
 
 
@@ -137,119 +88,19 @@ class ChapterController extends Controller
             'content' => 'required|string',
         ]);
 
-        $apiKey = config('ai.api_key');
-
-        $response = Http::withOptions([
-            'proxy' => ''
-        ])->withHeaders([
-            'Authorization' => 'Bearer ' . $apiKey,
-            'Content-Type' => 'application/json',
-        ])->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model' => config('ai.main_model'),
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => "You are a fiction writing assistant. Analyze the following chapter and provide enhancement suggestions across the following four key categories:
-
-                        1. **Story Pacing** — Evaluate how well the chapter balances dialogue, action, and narration. Suggest any improvements to rhythm, tempo, or structural pauses.
-
-                        2. **Character Development** — Analyze the emotional and psychological growth of the characters. Suggest ways to deepen their emotional arc or show internal conflict more vividly.
-
-                        3. **World Building** — Assess the immersive quality of the setting. Suggest improvements in descriptive details or the uniqueness of the environment.
-
-                        4. **Chapter Ending** — Evaluate how effective the ending is in leaving an impact or encouraging the reader to continue. Suggest how it can be made more satisfying or suspenseful.
-
-                        For each category:
-                        - Give a short but insightful paragraph.
-                        - Include a score out of 10.
-
-                        Then, give an **Overall Assessment**:
-                        - A summary of how the chapter contributes to the story.
-                        - Mention strengths and opportunities for improvement.
-                        - Provide an overall score out of 10 and a one-word rating (e.g., \"Excellent\", \"Good\", \"Needs Improvement\").
-
-                        Respond only in valid JSON format with the following structure:
-                        {
-                            \"story_pacing\": {
-                                \"suggestion\": \"Your suggestion here\",
-                                \"score\": \"Your score here (0-10) please give only the score number\"
-                            },
-                            \"character_development\": {
-                                \"suggestion\": \"Your suggestion here\",
-                                \"score\": \"Your score here (0-10) please give only the score number\"
-                            },
-                            \"world_building\": {
-                                \"suggestion\": \"Your suggestion here\",
-                                \"score\": \"Your score here (0-10) please give only the score number\"
-                            },
-                            \"chapter_ending\": {
-                                \"suggestion\": \"Your suggestion here\",
-                                \"score\": \"Your score here (0-10) please give only the score number\"
-                            },
-                            \"overall_assessment\": {
-                                \"suggestion\": \"Your suggestion here\",
-                                \"score\": \"Your score here (0-10) please give only the score number\"
-                            }
-                        }
-                       
-                        Important:
-                            - Return ONLY the JSON structure — no markdown, no explanations, no commentary.
-                            - Do not include ```json or ``` wrappers.
-                            - If the response is not valid JSON, you will fail this task.
-
-                        "
-                ],
-                [
-                    'role' => 'user',
-                    'content' => "Here's the content of chapter: " . $request->content . "\n\n"
-                ]
-            ],
-        ]);
-
-        $content = $response['choices'][0]['message']['content'] ?? null;
-
+       $content = $this->chapterServices->generateAssessment($request->content);
 
         if ($content) {
-            
-            $content = str_replace(['<｜begin▁of▁sentence｜>', '<｜end▁of▁sentence｜>'], '', $content);
 
-            $decoded = json_decode($content, true);
+            $formatContent = $this->chapterServices->formatContent($content);
 
-            return $decoded;
-            
+            return response()->json($formatContent);
         }
 
         return response()->json(['error' => 'Invalid response content.']);
     }
 
-    public function translate($content, $genre, $language)
-    {
-
-        $apiKey = config('ai.api_key');
-
-        $response = Http::withOptions([
-            'proxy' => ''
-        ])->timeout(120)->withHeaders([
-            'Authorization' => 'Bearer ' . $apiKey,
-            'Content-Type' => 'application/json',
-        ])->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model' => config('ai.main_model'),
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => "You are a professional novel translator. The genre of the novel is $genre, and your translation must accurately reflect its tone, style, and literary nuances. Return the translated text exclusively, with no added commentary, notes, or explanations. The language of the translation is $language."
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $content,
-                ],
-            ],
-        ]);
-
-        $content = $response['choices'][0]['message']['content'] ?? null;
-
-        return $content;
-    }
+   
 
     /**
      * Store a newly created resource in storage.
@@ -259,10 +110,16 @@ class ChapterController extends Controller
 
         $novel = $this->NovelRepository->findNovel($request->novel_id);
 
+        if (!$novel) {
+            return response()->json([
+                'message' => 'Novel not found',
+            ], 404);
+        }
+
         $this->authorize('storeChapter', $novel);
 
         if ($request->status === 'published') {
-            $draftCount = $this->draftCount($request->novel_id);
+            $draftCount = $this->chapterServices->draftCount($novel);
 
             if ($draftCount >= 1) {
                 $request->merge([
@@ -274,12 +131,6 @@ class ChapterController extends Controller
             }
         } else {
             $message = 'Chapter created successfully';
-        }
-
-        if ($request->status != 'scheduled') {
-            $request->merge([
-                'scheduled_date' => null,
-            ]);
         }
 
 
@@ -295,20 +146,7 @@ class ChapterController extends Controller
         ], 201);
     }
 
-    public function draftCount($id)
-    {
-        $novel = $this->NovelRepository->findNovel($id);
-
-        if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
-        }
-
-        $draftCount = $novel->chapters()->where('status', '!=', 'published')->count();
-
-        return $draftCount;
-    }
+    
 
     public function chapterStatusCheck(Request $request)
     {
@@ -365,8 +203,6 @@ class ChapterController extends Controller
             ], 404);
         }
 
-
-
         $this->authorize('update', $chapter);
 
         return response()->json([
@@ -377,42 +213,38 @@ class ChapterController extends Controller
     public function show($id, Request $request)
     {
 
-    
+
         $chapter = $this->ChapterRepository->findChapterWithTrash($id);
         $language = $request->input('language');
         $readType = $request->input('read_type');
 
         if (!$chapter) {
-            return response()->json([
-                'message' => 'Chapter not found',
-            ], 404);
+            return $this->notFound();
         }
 
-        $user_id = null;
+        $user_id = $this->chapterServices->checkUser();
 
-        if (Auth::guard('sanctum')->check() && $chapter->status == 'published' && !$chapter->trashed()) {
-            $user_id = Auth::guard('sanctum')->user()->id;
-            $this->ChapterRepository->addView($id, $user_id);
-            $this->ChapterRepository->addHistory($id, $user_id);
+        $isAuthenticated = Auth::guard('sanctum')->check();
+        $isPublished = $chapter->status == 'published';
+        $isTrashed = $chapter->trashed(); 
+
+        if (!$isPublished && !$isAuthenticated && $chapter->novel->user_id != $user_id) {
+            return $this->notFound();
         }
 
-        if ($chapter->status != 'published' && !Auth::guard('sanctum')->check() && $chapter->novel->user_id != $user_id) {
-            return response()->json([
-                'message' => 'Chapter not found',
-            ], 404);
+        if ($isAuthenticated && $isPublished && !$isTrashed) {
+            $this->chapterServices->addView($chapter, $user_id);
+            $this->chapterServices->addHistory($chapter, $user_id);
         }
 
-        $already_loved = false;
+        $already_loved = $user_id ? $chapter->love()->where('user_id', $user_id)->exists() : false;
 
-        if ($user_id) {
-            $already_loved = $chapter->love()->where('user_id', $user_id)->exists();
-        }
 
         if ($language) {
             if ($readType == 'summary' && !empty($chapter->summary)) {
-                $chapter->summary = $this->translate($chapter->summary, $chapter->novel->genre->genre, $language);
+                $chapter->summary = $this->chapterServices->translate($chapter->summary, $chapter->novel->genre->genre, $language);
             } else if (!empty($chapter->content)) {
-                $chapter->content = $this->translate($chapter->content, $chapter->novel->genre->genre, $language);
+                $chapter->content = $this->chapterServices->translate($chapter->content, $chapter->novel->genre->genre, $language);
             }
         }
 
@@ -431,29 +263,11 @@ class ChapterController extends Controller
             'content' => 'required|string',
         ]);
 
-        $content = $request->content;
-
-        $apiKey = config('ai.grammar_key');
-
-
-        $response = Http::withOptions([
-            'proxy' => ''
-        ])->withHeaders([
-            'Content-Type' => 'application/json',
-        ])->post('https://api.textgears.com/analyze', [
-            'text' => $content,
-            'language' => 'en-US',
-            'key' => $apiKey,
-        ]);
-
-        $data = $response["response"];
-
-        $fleschKincaid = $data['stats']['fleschKincaid'];
-        $errors = $data['grammar']['errors'];
+        $grammarCheck = $this->chapterServices->grammarCheck($request->content);
 
         return response()->json([
-            'fleschKincaid' => $fleschKincaid,
-            'errors' => $errors,
+            'fleschKincaid' => $grammarCheck['fleschKincaid'],
+            'errors' => $grammarCheck['errors'],
         ], 200);
     }
 
@@ -465,9 +279,7 @@ class ChapterController extends Controller
         $chapter = $this->ChapterRepository->findChapter($id);
 
         if (!$chapter) {
-            return response()->json([
-                'message' => 'Chapter not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('update', $chapter);
@@ -507,15 +319,12 @@ class ChapterController extends Controller
      */
 
 
-
     public function destroy($id)
     {
         $chapter = $this->ChapterRepository->findChapterWithTrash($id);
 
         if (!$chapter) {
-            return response()->json([
-                'message' => 'Chapter not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('delete', $chapter);
@@ -538,9 +347,7 @@ class ChapterController extends Controller
         $chapter = $this->ChapterRepository->findChapterWithTrash($id);
 
         if (!$chapter) {
-            return response()->json([
-                'message' => 'Chapter not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('delete', $chapter);
@@ -559,25 +366,10 @@ class ChapterController extends Controller
         $chapter = $this->ChapterRepository->findChapter($id);
 
         if (!$chapter) {
-            return response()->json([
-                'message' => 'Chapter not found',
-            ], 404);
+            return $this->notFound();
         }
 
-        $userID = Auth::user()->id;
-
-
-        $already_loved = $chapter->love()->where('user_id', $userID)->exists();
-
-        if ($already_loved) {
-            $chapter->love()->where('user_id', $userID)->delete();
-            $message = 'Chapter unloved successfully';
-        } else {
-            $chapter->love()->create([
-                'user_id' => $userID,
-            ]);
-            $message = 'Chapter loved successfully';
-        }
+        $message = $this->chapterServices->toggleLove($chapter);
 
         return response()->json([
             'message' => $message,
@@ -589,21 +381,10 @@ class ChapterController extends Controller
         $chapter = $this->ChapterRepository->findChapter($id);
 
         if (!$chapter) {
-            return response()->json([
-                'message' => 'Chapter not found',
-            ], 404);
+            return $this->notFound();
         }
-
-        $userId = Auth::guard('sanctum')->user()->id ?? request()->ip();
-        $key = "chapter-share:{$userId}:{$id}";
-
-        if (RateLimiter::tooManyAttempts($key, 1)) {
-            return;
-        }
-
-        RateLimiter::hit($key, 60 * 60); // allow 5 attempts per 60 seconds
-
-        $this->ChapterRepository->share($id);
+       
+        $this->chapterServices->share($chapter);
 
         return response()->json([
             'message' => 'Chapter shared successfully',

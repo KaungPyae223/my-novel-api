@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\LibraryServices;
 use Illuminate\Http\Request;
-use App\Repositories\LibraryRepository;
 
 class LibraryController extends Controller
 {
 
     protected $elastic;
-    protected $libraryRepository;
+    protected $libraryServices;
 
-    public function __construct(LibraryRepository $libraryRepository)
+    public function __construct(LibraryServices $libraryServices)
     {
 
-        $this->libraryRepository = $libraryRepository;
+        $this->libraryServices = $libraryServices;
         $this->elastic = app('elasticsearch');
     }
 
@@ -28,9 +28,9 @@ class LibraryController extends Controller
         $page = $request->query('page', 1);
 
         if (!$this->elastic) {
-            return $this->libraryRepository->searchNovelFromDB($q, $genre, $progress, $limit);
+            return $this->libraryServices->searchNovelFromDB($q, $genre, $progress, $limit);
         } else {
-            return $this->libraryRepository->searchNovelFromElastic($q, $genre, $progress, $limit, $page);
+            return $this->libraryServices->searchNovelFromElastic($q, $genre, $progress, $limit, $page);
         }
     }
 

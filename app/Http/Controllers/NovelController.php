@@ -49,6 +49,13 @@ class NovelController extends Controller
         ]);
     }
 
+    public function notFound()
+    {
+        return response()->json([
+            'message' => 'Novel not found',
+        ], 404);
+    }
+
 
     public function store(StoreNovelRequest $request)
     {
@@ -82,9 +89,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('update', $novel);
@@ -106,9 +111,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('view', $novel);
@@ -124,17 +127,13 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
-        $user_id = $this->novelServices->checkUserID();
+        $user_id = $this->novelServices->checkUser();
 
         if ($novel->status != 'published' && !$user_id && $novel->user_id != $user_id) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         if ($user_id) {
@@ -158,9 +157,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('update', $novel);
@@ -177,9 +174,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('view', $novel);
@@ -193,9 +188,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
         
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('view', $novel);
@@ -210,9 +203,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('view', $novel);
@@ -226,9 +217,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $lastReadChapter = $this->novelServices->getUserLastReadChapter($novel);
@@ -245,9 +234,7 @@ class NovelController extends Controller
         $q = $request->input('q');
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $chapters = $novel->chapters()
@@ -293,9 +280,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovelWithTrash($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('delete', $novel);
@@ -311,9 +296,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
        $message = $this->novelServices->toggleFavorite($novel);
@@ -328,9 +311,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
        
@@ -348,9 +329,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('update', $novel);
@@ -378,9 +357,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $novelPosts = $this->novelRepository->getNovelPost($id);
@@ -424,9 +401,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('writeLetter', $novel);
@@ -456,9 +431,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         $this->authorize('view', $novel);
@@ -473,9 +446,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json([
-                'message' => 'Novel not found',
-            ], 404);
+            return $this->notFound();
         }
 
         if (Auth::guard('sanctum')->check()) {
@@ -493,7 +464,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($novelID);
 
         if (!$novel) {
-            return response()->json('Novel not found', 404);
+            return $this->notFound();
         }
       
         if (!$this->novelServices->checkUser($userID)) {
@@ -514,7 +485,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($novelID);
 
         if (!$novel) {
-            return response()->json('Novel not found', 404);
+            return $this->notFound();
         }
 
         if (!$this->novelServices->checkUserID($userID)) {
@@ -534,7 +505,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json('Novel not found', 404);
+            return $this->notFound();
         }
 
         $q = $request->input('q');
@@ -553,7 +524,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json('Novel not found', 404);
+            return $this->notFound();
         }
 
         $this->authorize('view', $novel);
@@ -570,7 +541,7 @@ class NovelController extends Controller
         $novel = $this->novelRepository->findNovel($id);
 
         if (!$novel) {
-            return response()->json('Novel not found', 404);
+            return $this->notFound();
         }
 
        $message = $this->novelServices->getFanLetterStatus($novel);
