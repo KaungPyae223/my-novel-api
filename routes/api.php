@@ -14,7 +14,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix("v1")->group(function () {
+Route::prefix("v1")->middleware('throttle:api-limit')->group(function () {
 
     Route::controller(AuthenticationController::class)->group(function () {
         Route::post('/login', 'login');
@@ -22,8 +22,6 @@ Route::prefix("v1")->group(function () {
         Route::get('/check-username', 'check_username');
         Route::get('/email/verify/{id}/{hash}', 'verifyEmail')->middleware(['signed'])->name('verification.verify');
     });
-
-
   
 
     Route::middleware('auth:sanctum')->group(function () {
